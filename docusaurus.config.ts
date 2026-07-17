@@ -13,7 +13,8 @@ const config: Config = {
   projectName: 'zova-docs',
   trailingSlash: true,
   onBrokenLinks: 'throw',
-  markdown: {hooks: {onBrokenMarkdownLinks: 'throw'}},
+  markdown: {mermaid: true, hooks: {onBrokenMarkdownLinks: 'throw'}},
+  themes: ['@docusaurus/theme-mermaid'],
   i18n: {defaultLocale: 'en', locales: ['en']},
   presets: [[
     'classic',
@@ -22,7 +23,10 @@ const config: Config = {
         sidebarPath: './sidebars.ts',
         routeBasePath: 'docs',
         lastVersion: 'current',
-        versions: {current: {label: 'v0.23.0', path: ''}},
+        versions: {
+          current: {label: 'v0.24.0', path: ''},
+          '0.23.0': {label: 'v0.23.0'},
+        },
         editUrl: 'https://github.com/ata-sesli/zova-docs/edit/main/',
       },
       blog: false,
@@ -41,9 +45,14 @@ const config: Config = {
       logo: {alt: 'Zova feather logo', src: 'img/zova-logo.png'},
       items: [
         {type: 'docSidebar', sidebarId: 'docsSidebar', label: 'Docs', position: 'left'},
-        {to: '/docs/reference/release-notes-0.23', label: 'Release notes', position: 'left'},
+        {to: '/docs/reference/release-notes-0.24', label: 'Release notes', position: 'left'},
         {type: 'docsVersionDropdown', position: 'right'},
-        {href: 'https://github.com/ata-sesli/zova', label: 'GitHub', position: 'right'},
+        {
+          href: 'https://github.com/ata-sesli/zova',
+          position: 'right',
+          className: 'header-github-link',
+          'aria-label': 'GitHub repository',
+        },
       ],
     },
     footer: {
