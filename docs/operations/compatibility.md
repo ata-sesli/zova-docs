@@ -2,14 +2,15 @@
 
 Zova is pre-1.0. File format, native ABI, extension ABI, generated artifacts, and language packages must be treated as related but distinct compatibility boundaries.
 
-## File format 8
+## File format 9
 
-| Zova release | File format | Opens format 8? |
+| Zova release | File format | Opens format 9? |
 |---|---:|---|
-| 0.24.0 and newer compatible releases | 8 | yes |
+| 0.25.0 through 0.26.1 | 9 | yes |
+| 0.24.x | 8 | no |
 | 0.23.x and older | 7 or earlier | no |
 
-The format 7 → 8 transition is intentional. Zova 0.24.0 does not migrate format-7 databases in place. Older builds reject format-8 files instead of attempting a partial open, and renaming or editing metadata cannot make an older binary understand the newer private schema.
+The format 8 → 9 transition is intentional. Zova does not migrate format-8 databases in place. Older builds reject format-9 files instead of attempting a partial open, and renaming or editing metadata cannot make an older binary understand the newer private schema.
 
 ## Upgrade in a recoverable sequence
 
@@ -21,7 +22,9 @@ The format 7 → 8 transition is intentional. Zova 0.24.0 does not migrate forma
 6. Exercise application reads, writes, backup, and restore.
 7. Keep the old application and pre-upgrade data until cutover is proven.
 
-To move existing data forward, use a 0.23.x build to export it, then import it into a newly created format-8 database. Rollback uses the retained format-7 database or export with the 0.23.x application; it does not mean opening a format-8 file with Zova 0.23.
+To move existing format-8 data forward, export it with a compatible 0.24 build, then import it into a newly created format-9 database. Rollback uses the retained format-8 database or export with the older application; it does not mean opening a format-9 file with Zova 0.24.
+
+Zova 0.26.0 and 0.26.1 retain format 9, so upgrading from 0.25 or 0.26.0 does not require another database migration. Keep packages, headers, native libraries, and extensions aligned even when the file format is unchanged.
 
 ## Keep native artifacts aligned
 
@@ -41,4 +44,4 @@ That comparison is a safety floor, not a full pre-1.0 binary compatibility promi
 - Record the creating version with backups.
 - Keep export or rollback paths across upgrades.
 - Test restored data, not only in-place development databases.
-- Read [release notes](../reference/release-notes-0.24.md) before changing minor versions.
+- Read [release notes](../reference/release-notes-0.26.1.md) before changing versions.

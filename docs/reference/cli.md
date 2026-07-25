@@ -145,7 +145,7 @@ zova extension pack ./sample_ext --out ./sample_ext.zovaext
 zova extension verify --smoke ./sample_ext.zovaext
 ```
 
-This producer workflow is experimental in v0.24.0. Native extensions are trusted in-process code and require platform- and ABI-compatible builds.
+This producer workflow is experimental in v0.26.1. Native extensions are trusted in-process code and require platform- and ABI-compatible builds.
 
 ## Output and privacy contract
 

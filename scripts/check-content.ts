@@ -8,7 +8,7 @@ const ignored = new Set(['node_modules', '.git', '.docusaurus', 'build']);
 const forbidden = ['Dinosaurs are cool', 'My Site', 'facebook/docusaurus', 'docs/superpowers', 'TODO', 'TBD'];
 const failures: string[] = [];
 const tabValues = {
-  'programming-languages': new Set(['rust', 'python', 'go', 'zig', 'c']),
+  'programming-languages': new Set(['javascript', 'rust', 'python', 'go', 'zig', 'c']),
   'operating-systems': new Set(['macos-linux', 'windows']),
 };
 const tabGroupCounts = new Map(Object.keys(tabValues).map((group) => [group, 0]));

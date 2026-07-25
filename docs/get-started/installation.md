@@ -9,6 +9,7 @@ Choose the highest-level binding that fits your application. Every binding uses 
 
 | Application | Recommended package | Native dependency model |
 |---|---|---|
+| JavaScript or TypeScript | `zova-js` | prebuilt Node-API package on supported targets |
 | Rust | `zova` | builds bundled generated C |
 | Python | `zova` wheel | native extension included on supported targets |
 | Go | Go module + C ABI archive | cgo links the matching static library |
@@ -20,27 +21,36 @@ Use `zova-sys` only when a Rust application specifically needs the raw C ABI. Us
 
 ## Install or build for your language
 
-<Tabs groupId="programming-languages" defaultValue="rust">
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript / TypeScript">
+
+```sh
+bun add zova-js
+# or
+npm install zova-js
+```
+
+  </TabItem>
   <TabItem value="rust" label="Rust">
 
 ```sh
-cargo add zova@0.24.0
+cargo add zova@0.26.1
 ```
 
   </TabItem>
   <TabItem value="python" label="Python">
 
 ```sh
-uv add zova==0.24.0
+uv add zova==0.26.1
 # or
-python -m pip install zova==0.24.0
+python -m pip install zova==0.26.1
 ```
 
   </TabItem>
   <TabItem value="go" label="Go">
 
 ```sh
-go get github.com/atasesli/zova/bindings/go@v0.24.0
+go get github.com/ata-sesli/zova/bindings/go@v0.26.1
 ```
 
   </TabItem>
@@ -63,13 +73,27 @@ zig build c-abi
   </TabItem>
 </Tabs>
 
+## JavaScript and TypeScript
+
+`zova-js` ships TypeScript declarations and prebuilt Node-API packages for Node.js 22 and 24 and Bun on supported macOS, glibc Linux, and Windows targets. A prebuilt installation needs no Zig, Rust, C compiler, or install-time native download.
+
+```ts
+import { Database } from "zova-js";
+
+const db = Database.create("smoke.zova");
+db.exec("create table notes(id integer primary key, body text)");
+db.close();
+```
+
+Electron, Deno, browsers, musl Linux, Windows arm64, and WASM are not claimed in v0.26.1. Continue with the [JavaScript and TypeScript binding guide](../bindings/javascript.md).
+
 ## Rust
 
 Or pin the version explicitly:
 
 ```toml
 [dependencies]
-zova = "=0.24.0"
+zova = "=0.26.1"
 ```
 
 The safe crate builds the bundled generated-C native layer. Consumers need Rust 1.79 or newer and a C compiler, but not Zig.
@@ -109,7 +133,7 @@ Use context managers so native handles close deterministically. Continue with th
 
 ## Go
 
-The Go package calls Zova through cgo. Download the v0.24.0 C ABI archive matching the target operating system and architecture, then point the build at its directories:
+The Go package calls Zova through cgo. Download the v0.26.1 C ABI archive matching the target operating system and architecture, then point the build at its directories:
 
 <Tabs groupId="operating-systems" defaultValue="macos-linux">
   <TabItem value="macos-linux" label="macOS / Linux">
@@ -136,7 +160,7 @@ Keep the Go module, header, and library on the same Zova version. See the [Go bi
 
 ## CLI and C ABI archives
 
-Download the target archive from the [v0.24.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v0.24.0). CLI and C ABI packages are separate artifacts.
+Download the target archive from the [v0.26.1 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v0.26.1). CLI and C ABI packages are separate artifacts.
 
 After extracting the CLI, verify it:
 
@@ -165,7 +189,7 @@ Before integrating important data:
 1. Create a disposable database.
 2. Write and read one application row.
 3. Run `zova check --deep` with the matching CLI when available.
-4. Confirm the artifact reports v0.24.0.
+4. Confirm the artifact reports v0.26.1.
 5. Record the package and native artifact versions in the application build.
 
 Then follow [Build your first database](./first-database.md).

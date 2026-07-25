@@ -6,6 +6,7 @@ Zova publishes several distribution shapes because language bindings and deploym
 
 | Artifact | Use it when | Local build tools |
 |---|---|---|
+| npm `zova-js` package | using JavaScript or TypeScript on a supported platform | none for a prebuilt install |
 | CLI archive | operating or inspecting databases directly | none |
 | C ABI archive | embedding from C, Go, or another FFI language | linker/toolchain for the host app |
 | Source archive | building Zova or targeting an unpublished platform | Zig 0.16.0+ and C compiler |
@@ -15,7 +16,7 @@ Zova publishes several distribution shapes because language bindings and deploym
 | Python source distribution | building where no wheel matches | Python, Rust, and C compiler |
 | Go module + C ABI | using the cgo wrapper | Go 1.22+, cgo, matching native archive |
 
-Download native archives from the [v0.24.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v0.24.0). Match version, operating system, architecture, and artifact type.
+Download native archives from the [v0.26.1 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v0.26.1). Match version, operating system, architecture, and artifact type.
 
 ## Verify the package boundary
 

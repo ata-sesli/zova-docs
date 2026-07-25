@@ -2,7 +2,7 @@
 
 Vectors store numeric representations used for similarity ranking. In Zova, vectors live in named collections while descriptions, permissions, source records, and other application metadata remain in SQL.
 
-Zova 0.24.0 performs deterministic exact search. It compares the query against every eligible vector rather than using an approximate nearest-neighbor index.
+Zova performs deterministic exact search. It compares the query against every eligible vector rather than using an approximate nearest-neighbor index.
 
 ## Collections define the contract
 
@@ -95,7 +95,7 @@ for result in results {
 }
 ```
 
-Search is deterministic and supports top-k, inclusive distance thresholds, candidate filtering, search by an existing vector ID, and batch writes. For larger result sets, v0.24 uses adaptive top-k selection internally while preserving exact distances and deterministic result ordering. Candidate-filtered search is useful when SQL or application policy has already narrowed the allowed IDs.
+Search is deterministic and supports top-k, inclusive distance thresholds, candidate filtering, search by an existing vector ID, and batch writes. Since v0.24, larger result sets use adaptive top-k selection internally while preserving exact distances and deterministic result ordering. Candidate-filtered search is useful when SQL or application policy has already narrowed the allowed IDs.
 
 Exact search is a good fit for local datasets, offline ranking, deterministic tests, and SQL-filter-first workflows. It is not an ANN engine for million-scale, low-latency retrieval. If that scale is a hard requirement, evaluate the limitation before committing to Zova's vector layer.
 
@@ -130,4 +130,4 @@ Deleting a collection removes Zova-owned vectors in that collection. It does not
 
 Start with vectors in the main database. Optional bound vector stores change local file placement, not the collection or search APIs.
 
-Format 8 stores compact private collection keys and keeps each vector's cached norm beside its values. These are private storage optimizations: collection names, vector IDs, metrics, distances, and public APIs remain unchanged. Format-7 vector tables are not a supported SQL interface and are not migrated in place.
+Format 8 introduced compact private collection keys and stored each vector's cached norm beside its values; format 9 retains that vector layout. These are private storage optimizations: collection names, vector IDs, metrics, distances, and public APIs remain unchanged. Private vector tables are not a supported SQL interface.

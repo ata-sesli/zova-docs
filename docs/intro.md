@@ -5,7 +5,7 @@ Zova is an embedded database for applications that need more than rows but do no
 This combination is useful for document tools, local-first applications, desktop software, developer tools, and embedded services where metadata, files, embeddings, and relationships belong together. There is no daemon to start and no network protocol between the application and its data. The database is a `.zova` file opened directly by your process.
 
 :::warning[Pre-1.0 compatibility]
-Zova 0.24.0 writes file format 8. Format-8 files require Zova 0.24.0 or newer. Zova does not migrate format-7 databases in place, so keep a compatible backup or export with 0.23.x before creating a format-8 database.
+Zova 0.26.1 writes file format 9. Format 9 was introduced in Zova 0.25. Zova does not migrate format-8 databases in place, so export with a compatible format-8 release before creating and importing into a format-9 database.
 :::
 
 ## One database, four data shapes
@@ -84,7 +84,7 @@ Zova does not replace SQLite semantics:
 - SQL is SQLite SQL.
 - Locking and concurrent-handle behavior follow SQLite.
 - Transactions and savepoints remain connection-local.
-- Journal mode, synchronous mode, and auto-vacuum remain application choices; format-8 handles start with foreign-key enforcement enabled.
+- Journal mode, synchronous mode, and auto-vacuum remain application choices; format-9 handles start with foreign-key enforcement enabled.
 - Zova does not silently run `VACUUM` or rewrite your tables.
 
 Connections opened through Zova also register read-only helpers for vector distance, vector search, graph neighbors, and bounded graph walks. This lets specialized results join directly to application tables without exposing Zova's private schema.

@@ -32,6 +32,7 @@ The Zig layer includes the widest current surface:
 - create, bind, inspect, split, and unbind optional stores;
 - register application-provided extensions in the process registry;
 - load explicitly trusted local extension bundles;
+- use opaque graph keys, edge payloads, prepared keyed graph builds, topology scans, and atomic fresh-build sessions;
 - build extension bridges against native APIs; and
 - access low-level profiling and debugging paths intended for Zova development.
 

@@ -1,6 +1,6 @@
 # Current limitations
 
-Zova 0.24.0 is an embedded SQLite-based storage engine with deliberately bounded specialized features. Evaluate these boundaries against the application before adopting it.
+Zova 0.26.1 is an embedded SQLite-based storage engine with deliberately bounded specialized features. Evaluate these boundaries against the application before adopting it.
 
 ## Retrieval and graph scale
 
@@ -30,14 +30,14 @@ Calls through one database handle are serialized. Use multiple handles for actua
 
 ## Extensions and bindings
 
-Dynamic extensions are trusted in-process native code. High-level Rust, Python, and Go extension authoring, dynamic bundle loading, and safe scalar callback APIs are not included in v0.24.0. Generated-C package artifacts cannot portably load external bundles under Zig 0.16.
+Dynamic extensions are trusted in-process native code. High-level JavaScript, TypeScript, Rust, Python, and Go extension authoring, dynamic bundle loading, and safe scalar callback APIs are not included in v0.26.1. Generated-C package artifacts cannot portably load external bundles under Zig 0.16.
 
 Store-management APIs are native Zig and CLI-only. Diagnostics and salvage are CLI-first; bindings should not parse human output as a library contract.
 
-TypeScript and Swift bindings are not currently published. Python wheels are limited to the documented Linux/macOS CPython 3.10 and 3.12 matrix.
+The JavaScript and TypeScript package does not claim Electron, Deno, browsers, musl Linux, Windows arm64, or WASM. Swift bindings are not currently published. Python wheels are limited to the documented Linux/macOS CPython 3.10 and 3.12 matrix.
 
 ## Recovery and compatibility
 
-Zova does not perform in-place repair or overwrite destinations for backup, compact, restore, conversion, and salvage. File format is pre-1.0 and may change at minor releases; format 8 requires Zova 0.24.0 or newer, and v0.24 does not migrate format-7 databases in place.
+Zova does not perform in-place repair or overwrite destinations for backup, compact, restore, conversion, and salvage. File format is pre-1.0 and may change at minor releases. Format 9 was introduced in v0.25, and Zova does not migrate format-8 databases in place.
 
 If any boundary is a critical product requirement rather than a tolerable trade-off, keep SQLite alone or choose a specialized system that provides it today.

@@ -22,7 +22,7 @@ flowchart LR
 
 Opening a database with a required extension whose code is unavailable fails clearly. Zova does not ignore the requirement, search arbitrary library paths, or load executable bytes from the database.
 
-## Extension sources in v0.24
+## Extension sources in v0.26
 
 The process can provide extensions in three ways:
 
@@ -119,7 +119,7 @@ zova extension verify --smoke ./sample_ext.zovaext
 
 The smoke verification loads the bundle, creates a temporary database, installs the extension, runs its check hook, and reopens the database with the same bundle. It is a packaging and lifecycle check, not a substitute for extension-specific tests.
 
-Extension authors currently write native Zig or integrate through the low-level C ABI. There is no stable high-level Rust, Python, or Go authoring SDK in v0.24.0.
+Extension authors currently write native Zig or integrate through the low-level C ABI. There is no stable high-level JavaScript, TypeScript, Rust, Python, or Go authoring SDK in v0.26.1.
 
 ## Runtime artifact differences
 

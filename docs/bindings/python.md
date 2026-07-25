@@ -5,9 +5,9 @@ The Python package is a PyO3 extension backed by the safe Rust crate. It exposes
 ## Install and create a database
 
 ```sh
-uv add zova==0.24.0
+uv add zova==0.26.1
 # or
-python -m pip install zova==0.24.0
+python -m pip install zova==0.26.1
 ```
 
 ```python
@@ -62,7 +62,7 @@ with zova.Database.open("app.zova") as db:
     assert db.read_object_range(object_id, 0, 5) == b"hello"
 ```
 
-Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v0.24.0.
+Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v0.26.1.
 
 ## Packaging boundary
 

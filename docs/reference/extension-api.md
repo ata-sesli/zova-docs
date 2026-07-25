@@ -1,6 +1,6 @@
 # Extension reference
 
-An extension combines a validated manifest, process-provided native code, lifecycle hooks, and private tables under a reserved prefix. This page records the v0.24.0 bundle and host contract. Read the [Extensions guide](../guides/extensions.md) first for the trust model and deployment flow.
+An extension combines a validated manifest, process-provided native code, lifecycle hooks, and private tables under a reserved prefix. This page records the v0.26.1 bundle and host contract. Read the [Extensions guide](../guides/extensions.md) first for the trust model and deployment flow.
 
 ## Bundle layout
 
@@ -23,7 +23,7 @@ The library path must be relative, must not contain `..`, and must remain inside
   "name": "my_ext",
   "version": "0.1.0",
   "storage_prefix": "_zova_ext_my_ext_",
-  "zova_abi_min": "0.24.0",
+  "zova_abi_min": "0.26.1",
   "capabilities": "sql",
   "library": "libmy_ext",
   "entrypoint": "zova_extension_entry"
@@ -104,7 +104,7 @@ Drop also runs inside a savepoint:
 5. Validate core private schema.
 6. Release the savepoint.
 
-If the hook leaves `_zova_ext_<name>_*` objects behind, drop fails and the metadata remains installed. Update, enable, disable, and optional-installed extension states are not part of v0.24.0.
+If the hook leaves `_zova_ext_<name>_*` objects behind, drop fails and the metadata remains installed. Update, enable, disable, and optional-installed extension states are not part of v0.26.1.
 
 ## Storage rules
 
@@ -130,7 +130,7 @@ const ext = zova.Extension{
         .name = "my_ext",
         .version = "0.1.0",
         .storage_prefix = "_zova_ext_my_ext_",
-        .zova_abi_min = "0.24.0",
+        .zova_abi_min = "0.26.1",
         .capabilities = "sql",
     },
     .install = install,
@@ -152,4 +152,4 @@ Generated-C package snapshots retain source-compatible symbols but cannot dynami
 
 ## Current non-goals
 
-The v0.24 contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.
+The v0.26 contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.

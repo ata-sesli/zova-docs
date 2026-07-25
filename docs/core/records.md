@@ -128,7 +128,7 @@ db.commit()?;
 
 ## SQLite policy remains visible
 
-Format-8 handles start with SQLite foreign-key enforcement enabled so Zova can enforce private graph endpoint constraints and cascades. This also enforces foreign keys in application-owned tables on the same connection. Define valid constraints and treat violations as application errors.
+Format-9 handles start with SQLite foreign-key enforcement enabled so Zova can enforce private graph endpoint constraints and cascades. This also enforces foreign keys in application-owned tables on the same connection. Define valid constraints and treat violations as application errors.
 
 Zova does not silently change journal or synchronous mode, enable auto-vacuum, or run `VACUUM`. Configure those decisions for your workload:
 

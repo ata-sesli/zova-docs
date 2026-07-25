@@ -115,7 +115,15 @@ order by rank;
 
 Zova validates graph names, node IDs, edge types, endpoint existence, and Zova-owned targets. Deep diagnostics can identify invalid topology and target references without printing arbitrary user rows.
 
-Format-8 handles enable SQLite foreign-key enforcement for private graph endpoints. Deleting a node cascades to its incident private edges. Public node IDs, edge ordering, traversal results, and error behavior remain stable even though format 8 stores topology through compact private integer keys.
+Format-9 handles enable SQLite foreign-key enforcement for private graph endpoints. Deleting a node cascades to its incident private edges. Public node IDs, edge ordering, traversal results, and error behavior remain stable.
+
+## Format-9 publication APIs
+
+Format 9 stores edge types through a private dictionary and can attach one opaque payload BLOB to each authoritative edge without duplicating it into adjacency indexes. Public APIs continue to accept and return edge-type strings.
+
+The C ABI and raw `zova-sys` expose database-local opaque node and edge keys, paged topology scans, payload reads and replacement, prepared graph construction, and atomic fresh-build sessions. These APIs are intended for high-throughput local publication. Opaque keys are not portable identifiers and do not replace application-owned node IDs.
+
+The established graph CRUD, batch, neighbor, degree, and walk APIs remain the incremental and replay path. High-level JavaScript, Rust, Python, and Go bindings do not expose the advanced format-9 publication surfaces in v0.26.1.
 
 Application-owned references still require application checks. If graph nodes target SQL records, add tests or maintenance queries that compare the two identity sets.
 

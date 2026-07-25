@@ -2,7 +2,7 @@
 
 This walkthrough builds the first slice of a local document library. It stores searchable metadata in SQL and immutable file bytes as a Zova object, then reads them back together.
 
-The example uses Rust because it makes ownership and error handling explicit. The same storage model is available from Python, Go, C, and Zig; their binding chapters show the corresponding syntax.
+The example uses Rust because it makes ownership and error handling explicit. The same storage model is available from JavaScript, TypeScript, Python, Go, C, and Zig; their binding chapters show the corresponding syntax.
 
 ## What you will build
 
@@ -29,7 +29,7 @@ Create a Rust project and add Zova:
 ```sh
 cargo new zova-library
 cd zova-library
-cargo add zova@0.24.0
+cargo add zova@0.26.1
 ```
 
 Replace `src/main.rs` with the imports and database creation below:
