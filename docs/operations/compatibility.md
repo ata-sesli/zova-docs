@@ -1,47 +1,61 @@
 # Compatibility
 
-Zova is pre-1.0. File format, native ABI, extension ABI, generated artifacts, and language packages must be treated as related but distinct compatibility boundaries.
+Zova reports separate package, C ABI, SQLite, and storage-format versions. Changing one does not imply a change in the others.
 
-## File format 9
+| Version | Zova 1.0.0 |
+|---|---|
+| Package | `1.0.0` |
+| C ABI | `1.0.0` |
+| Vendored SQLite | `3.53.4` |
+| Zova storage format | `11` |
 
-| Zova release | File format | Opens format 9? |
-|---|---:|---|
-| 0.25.0 through 0.26.1 | 9 | yes |
-| 0.24.x | 8 | no |
-| 0.23.x and older | 7 or earlier | no |
+## Storage promise
 
-The format 8 → 9 transition is intentional. Zova does not migrate format-8 databases in place. Older builds reject format-9 files instead of attempting a partial open, and renaming or editing metadata cannot make an older binary understand the newer private schema.
+Every Zova 1.x release can migrate databases created by every earlier 1.x release. Format 9—the format written by released Zova 0.26.1—is the only pre-1.0 format guaranteed a migration into 1.0.
 
-## Upgrade in a recoverable sequence
+| Source format | v1.0.0 classification | Action |
+|---|---|---|
+| 11 | current | open normally |
+| 10 | migratable | explicitly migrate 10 → 11 |
+| 9 | migratable | explicitly migrate 9 → 10 → 11 |
+| 8 or older | unsupported legacy | export with a compatible older release |
+| newer than 11 | unsupported future | use a compatible newer Zova release |
 
-1. With the old release, create and verify a backup.
-2. Read the target release notes for format and behavioral changes.
-3. Upgrade application packages, headers, and native libraries together.
-4. Open a disposable copy first.
-5. Run `zova check --deep` with the new release.
-6. Exercise application reads, writes, backup, and restore.
-7. Keep the old application and pre-upgrade data until cutover is proven.
+Opening a database never migrates it. Current files open; migratable files return `MigrationRequired`; legacy and future files return distinct errors. Each path leaves the source byte-identical.
 
-To move existing format-8 data forward, export it with a compatible 0.24 build, then import it into a newly created format-9 database. Rollback uses the retained format-8 database or export with the older application; it does not mean opening a format-9 file with Zova 0.24.
+## Probe and migrate
 
-Zova 0.26.0 and 0.26.1 retain format 9, so upgrading from 0.25 or 0.26.0 does not require another database migration. Keep packages, headers, native libraries, and extensions aligned even when the file format is unchanged.
+Migration is offline and copy-forward. It writes a new destination and preserves the source:
 
-## Keep native artifacts aligned
+```sh
+zova format app.zova
+zova migrate app.zova app-format-11.zova
+```
 
-The C header, static library, CLI, generated-C snapshot, and binding package should come from the same Zova release. A successful link does not prove that mixed versions agree on every struct or capability.
+`zova format` reports the source format, current format, earliest migratable format, compatibility class, and recommended action. Add `--json` for automation. `zova migrate` verifies the destination by default; `--no-verify` skips that final reopen.
 
-Go depends on a matching C ABI archive. Rust and Python packages build or ship their documented native implementation. External extension loading also differs between native Zig-built artifacts and generated-C package snapshots.
+Equivalent probe and migrate APIs are available through the C ABI, Rust, Python, Go, and JavaScript bindings.
 
-## Extension requirements are independent
+## Migration rules
 
-Extension manifests declare `zova_abi_min` as `major.minor.patch`. The host rejects malformed requirements and a minimum newer than itself before loading native code.
+- The destination main database and bound-store siblings must not exist.
+- Bound stores migrate as one logical set and are published before the main database.
+- Staging needs free space roughly equal to the source set and a filesystem that supports hard links.
+- Migration takes an offline write lock while it plans and copies the source set.
+- User SQL schema and rows, public identities, objects, vectors, graphs, extension records, store identities, and ordering are preserved.
+- Extension-owned tables pass through unchanged and face normal extension validation when the destination opens.
+- Downgrade migration is unsupported.
 
-That comparison is a safety floor, not a full pre-1.0 binary compatibility promise. Rebuild and test native extensions for each Zova minor release. Also match the operating system, architecture, Zig/native ABI expectations, and deployment target.
+An interrupted run can leave destination reservations, published bound stores, and a `<destination>.migration-recovery/` directory. Stop every process using those paths, keep the destination and recovery directory together, then run the matching release's ownership-checking recovery script:
 
-## Plan for pre-1.0 change
+```sh
+python3 scripts/recover-migration.py /path/to/app-format-11.zova
+```
 
-- Pin Zova versions in applications that own important data.
-- Record the creating version with backups.
-- Keep export or rollback paths across upgrades.
-- Test restored data, not only in-place development databases.
-- Read [release notes](../reference/release-notes-0.26.1.md) before changing versions.
+On Windows, use `python` if `python3` is unavailable. The script removes only outputs proven to belong to that migration. If it refuses, preserve the files and investigate—do not force-delete or hand-publish staged files.
+
+## Keep artifacts aligned
+
+Use the package, C header, static library, CLI, generated-C companion, and extensions from the same release. Go requires a matching C ABI archive. Native Zig-built artifacts can host trusted dynamic extensions; generated-C package artifacts cannot dynamically load them.
+
+Read the [v1.0.0 release notes](../reference/release-notes-1.0.0.md) and [API stability contract](./api-stability.md) before upgrading production applications.

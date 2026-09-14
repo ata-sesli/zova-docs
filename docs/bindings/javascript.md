@@ -16,11 +16,11 @@ Prebuilt packages support Node.js 22 and 24 and Bun on:
 - glibc Linux arm64 and x86_64; and
 - Windows x86_64 with MSVC.
 
-Electron, Deno, browsers, musl Linux, Windows arm64, and WASM are not claimed in v0.26.1. A supported prebuilt installation does not need Zig, Rust, a C compiler, or an install-time native download.
+Electron, Deno, browser use of this native addon, musl Linux, and Windows arm64 are not claimed. A supported prebuilt installation does not need Zig, Rust, a C compiler, or an install-time native download. Browser applications can use the separate experimental [WebAssembly package](./wasm.md).
 
 ## Synchronous database
 
-`Database` exposes SQL statements, transactions, savepoints, backup and restore, objects, typed vectors, public graph operations, and bundled extension lifecycle.
+`Database` exposes SQL statements, transactions, savepoints, in-memory databases, backup and restore, binary KV, app events, objects, typed vectors, public graph operations, format probe/migration, and bundled extension lifecycle.
 
 ```ts
 import { Database, Step } from "zova-js";
@@ -61,7 +61,7 @@ console.log(bytes.byteLength);
 await db.close();
 ```
 
-Queued operations include backup, compact, restore, vector batches and searches, and graph batches and walks. Async transaction callbacks and prepared statement handles are not exposed.
+Queued operations include backup, compact, restore, format probe/migration, KV and event operations, vector batches and searches, and graph batches and walks. Async transaction callbacks and prepared statement handles are not exposed.
 
 ## Data mappings
 
@@ -97,4 +97,4 @@ try {
 db.close();
 ```
 
-Advanced opaque graph keys, topology scans, edge payloads, and fresh-build sessions remain C ABI and raw `zova-sys` capabilities in v0.26.1.
+Advanced opaque graph keys, topology scans, edge payloads, and fresh-build sessions remain stable low-level C ABI and raw `zova-sys` capabilities. Their omission from the high-level JavaScript API is deliberate.

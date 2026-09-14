@@ -45,6 +45,8 @@ Rollback discards pending events. Rolling back to a savepoint discards events cr
 
 This lets an application update SQL, objects, vectors, or graphs and publish one refresh signal only when the storage change is accepted.
 
+KV batches follow the same rule. An atomic batch plus one notification in the caller transaction is a useful aggregate cache-invalidation pattern: listeners receive the signal only after every entry commits.
+
 SQL `zova_notify(...)` participates when the surrounding transaction or savepoint was opened through Zova helpers. Raw SQL transaction scopes that Zova cannot track are rejected rather than assigned guessed delivery semantics.
 
 ## Events are explicit
@@ -60,6 +62,8 @@ Channel names are ASCII, 1–128 bytes, using letters, digits, `_`, `.`, `:`, an
 Each subscription queue holds 1,024 notifications. On overflow, Zova drops the oldest event and reports the drop count with the next received event. A listener that observes drops should reload authoritative state rather than assuming it can reconstruct every intermediate change.
 
 The API is polling-only through receive and drain operations. It does not create background worker threads or invoke callbacks.
+
+JavaScript `AsyncDatabase` queues event operations FIFO and provides asynchronous receive polling. This is still polling over an in-memory queue, not durable or cross-process delivery.
 
 ## Design channels around invalidation
 

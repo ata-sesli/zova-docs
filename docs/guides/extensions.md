@@ -100,7 +100,7 @@ The bundle manifest declares `zova_abi_min` as `major.minor.patch`. Before loadi
 - a required ABI newer than the running host; and
 - invalid names, paths, lengths, or entrypoint metadata.
 
-The extension ABI is still pre-1.0. Treat every Zova minor update as a rebuild-and-test boundary even when the declared minimum is satisfied. Semantic comparison prevents an obviously incompatible minimum from loading; it is not a promise that every pre-1.0 binary remains compatible forever.
+Zova 1.0 establishes the native 1.x platform boundary, while application-authored extensions remain experimental. The host validates the declared numeric ABI minimum; still test trusted native code against every supported platform and deployment artifact.
 
 ## Build an experimental Zig extension
 
@@ -119,7 +119,7 @@ zova extension verify --smoke ./sample_ext.zovaext
 
 The smoke verification loads the bundle, creates a temporary database, installs the extension, runs its check hook, and reopens the database with the same bundle. It is a packaging and lifecycle check, not a substitute for extension-specific tests.
 
-Extension authors currently write native Zig or integrate through the low-level C ABI. There is no stable high-level JavaScript, TypeScript, Rust, Python, or Go authoring SDK in v0.26.1.
+Extension authors can use native Zig or the low-level portable C/C++ plugin ABI. There is no stable high-level JavaScript, TypeScript, Rust, Python, or Go authoring SDK in v1.0.0.
 
 ## Runtime artifact differences
 

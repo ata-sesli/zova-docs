@@ -69,6 +69,6 @@ Do not use salvage as a routine migration tool. It is a best-effort recovery pat
 - Keep application metadata and specialized references consistent through explicit workflows.
 - Document required bound files and extensions with the application release.
 - Monitor free space before backup, compact, restore, split, and salvage.
-- Keep pre-1.0 compatibility boundaries in the rollback plan.
+- Keep storage-format compatibility and copy-forward migration boundaries in the rollback plan.
 
 Continue with [Diagnostics and salvage](./diagnostics.md) for inspection and degraded-data recovery.

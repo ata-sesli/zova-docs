@@ -183,7 +183,7 @@ Compare representative query results between the original and converted database
 - Deleting old data before the new references are verified.
 - Assuming object or vector deletion cascades into application rows.
 - Parsing CLI human output as a stable binding API.
-- Forgetting that a pre-1.0 format upgrade may require newer Zova artifacts.
+- Forgetting that a storage-format upgrade requires matching Zova artifacts and an explicit copy-forward migration.
 
 ## Keep a rollback path
 

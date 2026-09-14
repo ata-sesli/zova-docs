@@ -1,6 +1,6 @@
 # Extension reference
 
-An extension combines a validated manifest, process-provided native code, lifecycle hooks, and private tables under a reserved prefix. This page records the v0.26.1 bundle and host contract. Read the [Extensions guide](../guides/extensions.md) first for the trust model and deployment flow.
+An extension combines a validated manifest, process-provided native code, lifecycle hooks, and private tables under a reserved prefix. This page records the v1.0.0 bundle and host contract. Bundled lifecycle management is part of the stable application surface; application-authored extensions remain experimental. Read the [Extensions guide](../guides/extensions.md) first for the trust model and deployment flow.
 
 ## Bundle layout
 
@@ -23,7 +23,7 @@ The library path must be relative, must not contain `..`, and must remain inside
   "name": "my_ext",
   "version": "0.1.0",
   "storage_prefix": "_zova_ext_my_ext_",
-  "zova_abi_min": "0.26.1",
+  "zova_abi_min": "1.0.0",
   "capabilities": "sql",
   "library": "libmy_ext",
   "entrypoint": "zova_extension_entry"
@@ -42,7 +42,7 @@ The library path must be relative, must not contain `..`, and must remain inside
 
 The host rejects duplicate names or storage prefixes, malformed installed rows, a different ABI major, or a minimum ABI newer than the host.
 
-Because the ABI is pre-1.0, rebuild and test for every Zova minor release even when `zova_abi_min` is satisfied.
+The host enforces the numeric 1.x ABI floor, but extension code is trusted native code and must still be tested on every supported platform and deployment artifact.
 
 ## Trust-store resolution
 
@@ -104,7 +104,7 @@ Drop also runs inside a savepoint:
 5. Validate core private schema.
 6. Release the savepoint.
 
-If the hook leaves `_zova_ext_<name>_*` objects behind, drop fails and the metadata remains installed. Update, enable, disable, and optional-installed extension states are not part of v0.26.1.
+If the hook leaves `_zova_ext_<name>_*` objects behind, drop fails and the metadata remains installed. Enable, disable, and optional-installed extension states are not part of v1.0.0.
 
 ## Storage rules
 
@@ -130,7 +130,7 @@ const ext = zova.Extension{
         .name = "my_ext",
         .version = "0.1.0",
         .storage_prefix = "_zova_ext_my_ext_",
-        .zova_abi_min = "0.26.1",
+        .zova_abi_min = "1.0.0",
         .capabilities = "sql",
     },
     .install = install,
@@ -142,6 +142,24 @@ const ext = zova.Extension{
 
 The CLI scaffold/build/pack flow produces the expected project and bundle shape. High-level Rust, Go, and Python authoring APIs are deferred.
 
+## Explicit extension-data upgrades
+
+Normal open requires the installed data-contract version to match the loaded manifest exactly; it never upgrades automatically. A loader-capable host can perform an explicitly declared, forward, single-step upgrade:
+
+```sh
+zova --extension ./new-plugin.zovaext extension upgrade app.zova my_plugin
+```
+
+The upgrade hook, target registration/checking, schema validation, and metadata publication run inside one savepoint. Failure rolls everything back. Downgrades, equal versions, undeclared steps, and automatic multi-hop path search are unsupported.
+
+When both a Zova format migration and an extension-data upgrade are needed, migrate the database first with code matching the installed extension version, then run the extension upgrade against the migrated database.
+
+## Portable plugin ABI v1
+
+`include/zova_plugin.h` defines the language-neutral C/C++ authoring contract. A portable bundle selects `zova_plugin_entry_v1` in its manifest and returns a static `zova_plugin_descriptor_v1`. Hooks receive a temporary host-service table that supports bounded SQL execution.
+
+The ABI does not sandbox plugins: loading a library may execute native initializers. No allocation or C++ exception may cross the boundary. Windows dynamic loading and generated-C dynamic loading remain unsupported.
+
 ## C ABI host surface
 
 The low-level ABI includes bundle verification, trust/untrust operations, and database open/create variants that receive explicit trusted bundle paths. Loaded libraries remain alive until the database handle closes.
@@ -152,4 +170,4 @@ Generated-C package snapshots retain source-compatible symbols but cannot dynami
 
 ## Current non-goals
 
-The v0.26 contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.
+The v1.0.0 contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.

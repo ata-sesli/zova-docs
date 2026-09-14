@@ -5,10 +5,10 @@ The Go package wraps Zova's C ABI through cgo. Go owns ergonomic handle and resu
 ## Install both layers
 
 ```sh
-go get github.com/ata-sesli/zova/bindings/go@v0.26.1
+go get github.com/ata-sesli/zova/bindings/go@v1.0.0
 ```
 
-Download the v0.26.1 C ABI archive for the target platform, then configure cgo:
+Download the v1.0.0 C ABI archive for the target platform, then configure cgo:
 
 ```sh
 CGO_CFLAGS="-I/absolute/path/to/zova-c-abi/include" \
@@ -50,9 +50,9 @@ Keep a transaction's related calls on the intended handle and use the binding's 
 
 ## Feature coverage
 
-Go covers relational statements, transactions, savepoints, objects, vectors, graphs, app events, operational copies, SQL-native helpers, and lifecycle methods for extensions present in the process registry.
+Go covers relational statements, transactions, savepoints, in-memory databases, binary KV, objects, vectors, graphs, app events, format probe/migration, operational copies, SQL-native helpers, and lifecycle methods for extensions present in the process registry.
 
-Object, vector, and graph methods route through bound stores after open. Store create/bind/split/unbind management is CLI/native Zig-only in v0.26.1.
+Object, vector, and graph methods route through bound stores after open. Store create/bind/split/unbind management is CLI/native Zig-only in v1.0.0.
 
 Dynamic external extension loading and app-defined callback authoring are not high-level Go APIs. Bundled/process-provided extensions remain usable through documented lifecycle methods.
 

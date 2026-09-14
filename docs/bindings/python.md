@@ -5,9 +5,9 @@ The Python package is a PyO3 extension backed by the safe Rust crate. It exposes
 ## Install and create a database
 
 ```sh
-uv add zova==0.26.1
+uv add zova==1.0.0
 # or
-python -m pip install zova==0.26.1
+python -m pip install zova==1.0.0
 ```
 
 ```python
@@ -49,6 +49,7 @@ Use Zova's transaction helpers when app-event delivery must follow commit and ro
 The package includes:
 
 - objects, range reads, streaming `ObjectWriter`, chunks, and assembly;
+- transactional binary KV and in-memory databases;
 - typed vectors and exact search;
 - graphs and bounded traversal;
 - SQL-native vector and graph helpers;
@@ -62,11 +63,11 @@ with zova.Database.open("app.zova") as db:
     assert db.read_object_range(object_id, 0, 5) == b"hello"
 ```
 
-Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v0.26.1.
+Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v1.0.0.
 
 ## Packaging boundary
 
-Published wheels for supported Linux/macOS and CPython targets include the native extension and need no compiler. A source-distribution install needs Rust and a C compiler.
+Published stable-ABI wheels cover Linux and macOS x86_64/arm64 and Windows x86_64. Python 3.13 or newer is required; CPython 3.13 and 3.14 are tested. Matching wheels need no compiler, and no Python source distribution is published.
 
 The package build uses generated native sources. Bundled extensions such as `trgm` are available, but app-registered extension authoring, safe scalar callbacks, and dynamic `.zovaext` loading are not exposed as Python APIs. Use the CLI, C ABI, or a native host when those capabilities are required.
 

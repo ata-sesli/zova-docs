@@ -40,6 +40,6 @@ Not every native symbol is a stable cross-language contract. Use the C ABI when 
 
 ## Extensions
 
-Extension authors currently use native Zig for the complete manifest-and-hook model. Treat the extension ABI as pre-1.0: build for the target platform, declare `zova_abi_min`, and rebuild and test for each Zova minor release.
+Extension authors currently use native Zig for the complete manifest-and-hook model. Authoring remains experimental and outside the stable native 1.x application contract: build for the target platform, declare `zova_abi_min`, and test against the exact deployment artifact.
 
 The CLI's scaffold/build/pack workflow is the easiest starting point; read [Extensions](../guides/extensions.md) before writing lifecycle or SQL registration hooks.

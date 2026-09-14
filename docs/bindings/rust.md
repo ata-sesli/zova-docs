@@ -5,7 +5,7 @@ The `zova` crate is the normal safe Rust interface. It wraps database, statement
 ## Install and open
 
 ```sh
-cargo add zova@0.26.1
+cargo add zova@1.0.0
 ```
 
 ```rust
@@ -64,20 +64,21 @@ Use the transaction APIs rather than issuing raw transaction SQL when app events
 The safe crate covers:
 
 - complete and streaming objects, range reads, chunks, and assembly;
+- transactional binary KV and in-memory databases;
 - typed vector collections, CRUD, batch writes, and exact search;
 - graphs, nodes, edges, neighbors, and bounded walks;
 - SQL-native vector and graph helpers through prepared statements;
 - same-process app events; and
 - backup, compact, restore, and bundled extension lifecycle.
 
-After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only in v0.26.1.
+After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only in v1.0.0.
 
 ## Native packaging and extensions
 
-The crate builds a bundled generated-C snapshot, so consumers need Rust 1.79+ and a C compiler but not Zig. Bundled extensions such as `trgm` are available through safe lifecycle methods.
+The crate selects a target-specific generated-C companion crate, so supported consumers need Rust 1.79+ and a C compiler but not Zig or a build-time source download. Bundled extensions such as `trgm` are available through safe lifecycle methods.
 
 External dynamic bundle loading and scalar callback registration are exposed at the low-level `zova-sys` boundary, not as safe high-level APIs. Generated-C artifacts cannot portably load external `.zovaext` bundles; use a native Zig-built host for that deployment.
 
-Raw `zova-sys` also declares the format-9 opaque graph key, edge payload, topology scan, prepared build, and fresh-build session APIs. The safe `zova` crate does not wrap those publication surfaces in v0.26.1.
+Raw `zova-sys` also declares the opaque graph key, edge payload, topology scan, prepared build, and fresh-build session APIs. The safe `zova` crate deliberately does not wrap those low-level publication surfaces.
 
 See [Build your first database](../get-started/first-database.md) for an end-to-end Rust example and the individual core chapters for storage semantics.

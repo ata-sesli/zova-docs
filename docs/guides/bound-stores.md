@@ -103,7 +103,7 @@ Once the database opens successfully, storage placement is transparent:
 
 This routing also applies to Zova's SQL-native vector and graph helpers because the stores are attached to the Zova-owned SQLite connection.
 
-Store management itself remains explicit. In v0.26.1, create, bind, split, and unbind are available through the CLI and native Zig API, not the high-level JavaScript, Rust, Python, or Go APIs.
+Store management itself remains explicit. In v1.0.0, create, bind, split, and unbind are available through the CLI and native Zig API, not the high-level JavaScript, Rust, Python, or Go APIs.
 
 ## Identity and consistency checks
 
@@ -161,7 +161,7 @@ zova restore backup.zova restored.zova
 
 They copy readable bound object, vector, and graph data into a **self-contained destination**. They do not reproduce the source's external-store layout. This makes the output portable as one file and gives restoration a simpler default.
 
-If your product requires a multi-file package that preserves the original layout, build and verify that packaging workflow explicitly; v0.26.1 does not provide a bundle-backup format.
+If your product requires a multi-file package that preserves the original layout, build and verify that packaging workflow explicitly; v1.0.0 does not provide a bundle-backup format.
 
 ## Bound stores are not
 

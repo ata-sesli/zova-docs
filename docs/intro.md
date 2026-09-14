@@ -1,14 +1,14 @@
 # Zova documentation
 
-Zova is an embedded database for applications that need more than rows but do not want to operate a separate storage service. It keeps SQLite as the relational core, then adds content-addressed objects, exact-search vectors, and directed graphs inside the same local database model.
+Zova is an embedded database for applications that need more than rows but do not want to operate a separate storage service. It keeps SQLite as the relational core, then adds transactional binary key-value storage, content-addressed objects, exact-search vectors, and directed graphs inside the same local database model.
 
 This combination is useful for document tools, local-first applications, desktop software, developer tools, and embedded services where metadata, files, embeddings, and relationships belong together. There is no daemon to start and no network protocol between the application and its data. The database is a `.zova` file opened directly by your process.
 
-:::warning[Pre-1.0 compatibility]
-Zova 0.26.1 writes file format 9. Format 9 was introduced in Zova 0.25. Zova does not migrate format-8 databases in place, so export with a compatible format-8 release before creating and importing into a format-9 database.
+:::info[Zova 1.0 compatibility]
+Zova 1.0.0 writes format 11. Opening never migrates a database. Released v0.26.1 format-9 databases and format-10 release-candidate databases can be migrated explicitly into a new format-11 destination; the source remains unchanged. Formats older than 9 are unsupported.
 :::
 
-## One database, four data shapes
+## One database, five data shapes
 
 Most applications do not have one kind of data. A document library, for example, may need:
 
@@ -22,6 +22,7 @@ Zova gives each concern a storage shape with a clear responsibility.
 | Shape | Store here | Identity |
 |---|---|---|
 | **Records** | metadata, constraints, indexes, joins, views, and application state | your SQL primary keys |
+| **Key-value** | transactional binary state, caches, checkpoints, and namespaced values | namespace + byte key |
 | **Objects** | immutable files, payloads, and byte sequences | SHA-256 of the complete bytes |
 | **Vectors** | embeddings and compact numeric features | collection name + application vector ID |
 | **Graphs** | explicit relationships between stable entities | graph name + application node ID |
@@ -33,6 +34,7 @@ flowchart LR
     App["Your application"] --> API["Zova binding"]
     API --> File["app.zova"]
     File --> Records["SQL records<br/>metadata and constraints"]
+    File --> KV["Key-value<br/>transactional binary state"]
     File --> Objects["Objects<br/>immutable bytes"]
     File --> Vectors["Vectors<br/>similarity ranking"]
     File --> Graphs["Graphs<br/>explicit relationships"]
@@ -84,18 +86,24 @@ Zova does not replace SQLite semantics:
 - SQL is SQLite SQL.
 - Locking and concurrent-handle behavior follow SQLite.
 - Transactions and savepoints remain connection-local.
-- Journal mode, synchronous mode, and auto-vacuum remain application choices; format-9 handles start with foreign-key enforcement enabled.
+- Journal mode, synchronous mode, and auto-vacuum remain application choices; format-11 handles start with foreign-key enforcement enabled.
 - Zova does not silently run `VACUUM` or rewrite your tables.
 
 Connections opened through Zova also register read-only helpers for vector distance, vector search, graph neighbors, and bounded graph walks. This lets specialized results join directly to application tables without exposing Zova's private schema.
 
 ## Single-file by default
 
-A normal `.zova` file supports all four storage shapes. Start there. A single file is easier to move, back up, restore, and reason about.
+A normal `.zova` file supports all five storage shapes. Start there. A single file is easier to move, back up, restore, and reason about.
 
 When object bytes, vector rows, or graph topology need a separate placement lifecycle, the main database can optionally bind one store of each type. The API remains the same after opening the database, but SQLite attaches the external files and Zova validates their identities and consistency markers.
 
 Bound stores are a local operational choice. They are not remote storage, replication, cloud synchronization, or a stronger transaction system. Read [Optional bound stores](./guides/bound-stores.md) before splitting a database.
+
+## File-backed or in-memory
+
+Zova 1.0 also provides first-class in-memory databases across native bindings. They expose the same SQL, KV, object, vector, graph, transaction, backup/restore, and app-event behavior without a durable file. Each database is private to its handle and disappears when that handle closes.
+
+Use in-memory mode for tests, disposable transformations, and process-local state. Use a file-backed database when data must survive process exit.
 
 ## Choose the next chapter
 
@@ -103,7 +111,7 @@ If you are new to Zova, follow the path in order:
 
 1. [Install Zova](./get-started/installation.md) for your language or platform.
 2. [Build your first database](./get-started/first-database.md) using SQL records and object storage together.
-3. Learn the individual storage models: [records](./core/records.md), [objects](./core/objects.md), [vectors](./core/vectors.md), and [graphs](./core/graphs.md).
+3. Learn the individual storage models: [records](./core/records.md), [key-value](./core/key-value.md), [objects](./core/objects.md), [vectors](./core/vectors.md), and [graphs](./core/graphs.md).
 4. Review [operational safety](./operations/safety.md) before putting important data into production.
 
 If you already have a SQLite application, start with [Migrate from SQLite](./guides/sqlite-migration.md). If you are evaluating a specific capability, begin with its core chapter and continue into the linked guide.

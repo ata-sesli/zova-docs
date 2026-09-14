@@ -24,7 +24,7 @@ Avoid holding application locks across Zova calls unless lock ordering is define
 
 ## Scalar SQL callbacks
 
-The v0.26.1 C ABI can register scalar SQL functions on Zova-owned connections. Callback arguments are borrowed only for the call, and Zova copies result bytes according to the result contract.
+The v1.0.0 C ABI can register scalar SQL functions on Zova-owned connections. Callback arguments are borrowed only for the call, and Zova copies result bytes according to the result contract.
 
 A callback must not re-enter the same `zova_database` handle. Re-entry can violate serialization and SQLite callback assumptions. If a callback needs external state, provide it through the documented user-data lifetime rather than global mutable state.
 
@@ -42,10 +42,10 @@ v0.24 adds `zova_vector_delete_many` and `zova_graph_edge_delete_many`. Both val
 
 The request arrays and their strings are borrowed only for the call. Use a matching header and static library together; headers older than v0.24 do not declare these additive ABI entry points.
 
-## Format-9 graph publication
+## Low-level graph publication
 
 The v0.25 C ABI added opaque node and edge keys, paged topology scans, edge payloads, prepared graph builds, and atomic fresh-build sessions. These are additive low-level publication APIs for applications that need high-throughput graph construction.
 
 Opaque keys are database-local row identities, not portable application IDs. A key becomes invalid when its row is deleted or its transaction or unfinished fresh-build session rolls back. Public graph names, node IDs, edge-type strings, traversal ordering, and incremental graph APIs remain the stable application-facing model.
 
-The advanced format-9 graph surfaces are also declared by raw `zova-sys`. They are not wrapped by the high-level JavaScript, Python, Go, or safe Rust APIs in v0.26.1.
+The advanced graph surfaces are also declared by raw `zova-sys`. They are stable low-level 1.x contracts and are deliberately not wrapped by the high-level JavaScript, Python, Go, or safe Rust APIs.

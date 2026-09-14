@@ -94,6 +94,12 @@ Zova also exposes lower-level manifest and chunk workflows for transfer systems:
 
 These operations make resumable transfer possible without turning Zova into a network service. The application still owns transport, authorization, retry policy, and peer discovery.
 
+## Choose a chunking profile
+
+The default `deduplication` profile uses FastCDC-v1 chunks. The additive `streaming` profile uses exact 1 MiB chunks except for the final remainder, reducing manifest rows for large payloads where cross-object deduplication matters less.
+
+Both profiles produce the same full-object SHA-256 identity and verified chunk model. Replaying an existing object through another profile keeps its first valid physical representation.
+
 ## How deduplication works
 
 Zova splits data using FastCDC-v1 and stores verified chunks. Two complete objects can share chunks even when their object IDs differ. Repeating the same complete content reuses the same object identity.
