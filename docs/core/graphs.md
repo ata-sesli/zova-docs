@@ -123,7 +123,7 @@ Format 9 stores edge types through a private dictionary and can attach one opaqu
 
 The C ABI and raw `zova-sys` expose database-local opaque node and edge keys, paged topology scans, payload reads and replacement, prepared graph construction, and atomic fresh-build sessions. These APIs are intended for high-throughput local publication. Opaque keys are not portable identifiers and do not replace application-owned node IDs.
 
-The established graph CRUD, batch, neighbor, degree, and walk APIs remain the incremental and replay path. High-level JavaScript, Rust, Python, and Go bindings deliberately do not expose the advanced low-level publication surfaces in v1.0.0.
+The established graph CRUD, batch, neighbor, degree, and walk APIs remain the incremental and replay path. High-level JavaScript, Rust, Python, and Go bindings deliberately do not expose the advanced low-level publication surfaces in v1.3.0.
 
 Application-owned references still require application checks. If graph nodes target SQL records, add tests or maintenance queries that compare the two identity sets.
 

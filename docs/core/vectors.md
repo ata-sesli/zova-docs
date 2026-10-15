@@ -130,4 +130,6 @@ Deleting a collection removes Zova-owned vectors in that collection. It does not
 
 Start with vectors in the main database. Optional bound vector stores change local file placement, not the collection or search APIs.
 
-Format 8 introduced compact private collection keys and stored each vector's cached norm beside its values; format 11 retains that vector layout. These are private storage optimizations: collection names, vector IDs, metrics, distances, and public APIs remain unchanged. Private vector tables are not a supported SQL interface.
+Format 8 introduced compact private collection keys and stored each vector's cached norm beside its values; later formats retain that vector layout. These are private storage optimizations: collection names, vector IDs, metrics, distances, and public APIs remain unchanged. Private vector tables are not a supported SQL interface.
+
+Format 12, introduced in Zova 1.2.0, adds transactional vector change tracking. Each vector write records a source revision in the same transaction, so a trusted extension that maintains a derived index can reconcile against an exact snapshot. Extensions read this history through the [plugin host services](../reference/extension-api.md#host-services); it is not an application API.

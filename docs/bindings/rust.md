@@ -5,7 +5,7 @@ The `zova` crate is the normal safe Rust interface. It wraps database, statement
 ## Install and open
 
 ```sh
-cargo add zova@1.0.0
+cargo add zova@1.3.0
 ```
 
 ```rust
@@ -57,6 +57,8 @@ Dropping statements and result owners releases their native resources. Do not tr
 
 The crate exposes transactions, immediate transactions, named savepoints, and closure-based savepoint helpers. On a shared handle, scoped guards keep the mutex for the complete unit so another clone cannot interleave calls in the middle.
 
+Since 1.2.0, `transaction`, `transaction_immediate`, and `with_savepoint` roll their scope back when the closure returns an error and also when it panics. The rollback happens before the connection lock is released, then the panic propagates unchanged; use `std::panic::catch_unwind` to recover from it. This does not apply to `panic = "abort"` profiles or process termination. If a rollback fails, that `SharedDatabase` handle is retired and its later calls fail; open a new one.
+
 Use the transaction APIs rather than issuing raw transaction SQL when app events or Zova's transaction-aware behavior must track the scope.
 
 ## Specialized storage
@@ -71,13 +73,27 @@ The safe crate covers:
 - same-process app events; and
 - backup, compact, restore, and bundled extension lifecycle.
 
-After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only in v1.0.0.
+After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only in v1.3.0.
 
 ## Native packaging and extensions
 
 The crate selects a target-specific generated-C companion crate, so supported consumers need Rust 1.79+ and a C compiler but not Zig or a build-time source download. Bundled extensions such as `trgm` are available through safe lifecycle methods.
 
-External dynamic bundle loading and scalar callback registration are exposed at the low-level `zova-sys` boundary, not as safe high-level APIs. Generated-C artifacts cannot portably load external `.zovaext` bundles; use a native Zig-built host for that deployment.
+Since 1.2.0, the safe crate selects trusted `.zovaext` bundles at create/open:
+
+```rust
+let extensions = zova::ExtensionOptions {
+    bundle_paths: vec!["./search.zovaext".into()],
+    trust_store_path: None,
+};
+let mut db = zova::Database::create_with_extensions("app.zova", &extensions)?;
+db.install_extension("search")?;
+// Reopen with Database::open_with_extensions(path, OpenOptions, &extensions).
+```
+
+Trust the bundle first with `zova extension trust ./search.zovaext`; opening never grants trust or selects code from database metadata. `SharedDatabase` provides the same constructors. Child handles keep the connection and loaded libraries alive. Bundles and their runtime dependencies must match the host OS, CPU, and deployment target.
+
+Scalar callback registration, explicit extension-data upgrades, linked plugin descriptors, and extension-aware migration are exposed only at the raw `zova-sys` boundary.
 
 Raw `zova-sys` also declares the opaque graph key, edge payload, topology scan, prepared build, and fresh-build session APIs. The safe `zova` crate deliberately does not wrap those low-level publication surfaces.
 

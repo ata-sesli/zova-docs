@@ -17,7 +17,7 @@ try db.exec(
 );
 ```
 
-Zova development targets Zig 0.16.0 or newer. Build scripts should pin a compatible Zig version because the project and extension host rely on native toolchain behavior beyond the stable C ABI.
+Zova development targets Zig 0.17.0 or newer. Rebuild legacy Zig-native extension bundles with the matching compiler; the portable C plugin ABI is unaffected by the toolchain. Build scripts should pin a compatible Zig version because the project and extension host rely on native toolchain behavior beyond the stable C ABI.
 
 ## Resource and error discipline
 

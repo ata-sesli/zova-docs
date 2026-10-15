@@ -108,6 +108,6 @@ Do not present raw distances as universal confidence percentages. Their distribu
 
 Exact flat search gives deterministic results for the stored representation and avoids index build or recall tuning. Its work grows with the number of eligible vectors.
 
-It is appropriate for local collections, offline ranking, correctness-sensitive tests, and selective SQL-first workflows. It is not an ANN index. If latency must remain flat across millions of vectors, Zova 1.0.0 does not provide the required indexing strategy.
+It is appropriate for local collections, offline ranking, correctness-sensitive tests, and selective SQL-first workflows. It is not an ANN index. If latency must remain flat across millions of vectors, Zova 1.3.0 core does not provide the required indexing strategy. The experimental USearch HNSW reference extension demonstrates approximate search built on the plugin ABI; see [Extensions](./extensions.md#reference-extensions).
 
 Read [Vectors](../core/vectors.md) for collection and type semantics, and [SQL access](../core/sql.md) for connection-local helper behavior.

@@ -10,13 +10,13 @@ Zova publishes several distribution shapes because language bindings and deploym
 | npm `zova-wasm` package | experimental browser SQL and KV | none; serve the packaged worker and WASM assets |
 | CLI archive | operating or inspecting databases directly | none |
 | C ABI archive | embedding from C, Go, or another FFI language | linker/toolchain for the host app |
-| Source archive | building Zova or targeting an unpublished platform | Zig 0.16.0+ and C compiler |
+| Source archive | building Zova or targeting an unpublished platform | Zig 0.17.0+ and C compiler |
 | Rust `zova` crate | using the safe Rust API | Rust 1.79+ and C compiler |
 | Rust `zova-sys` crate | using raw FFI or low-level C ABI features | Rust 1.79+ and C compiler |
 | Python wheel | using a supported CPython/platform combination | none beyond Python |
 | Go module + C ABI | using the cgo wrapper | Go 1.22+, cgo, matching native archive |
 
-Download native archives from the [v1.0.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.0.0). Match version, operating system, architecture, and artifact type.
+Download native archives from the [v1.3.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.3.0). Match version, operating system, architecture, and artifact type.
 
 ## Verify the package boundary
 
@@ -26,9 +26,9 @@ Do not combine a header from one version with a static library from another. Do 
 
 ## Native versus generated-C behavior
 
-Rust packaging selects target-specific generated-C companion crates so users do not need Zig or build-time downloads. Python publishes stable-ABI wheels with the native extension included and no source distribution. Generated-C snapshots preserve the documented public behavior and C symbols, but dynamic `.zovaext` loading is unavailable because Zig 0.16 cannot portably emit the dynamic-loader path through its C backend.
+Rust packaging selects target-specific generated-C companion crates so users do not need Zig or build-time downloads. Python publishes stable-ABI wheels with the native extension included and no source distribution. Generated-C snapshots preserve the documented public behavior and C symbols. Since 1.2.0 they also include the trusted `.zovaext` loader on Linux, macOS, and Windows, so package consumers can select bundles at create/open. Packages from 1.1.0 and earlier do not gain this retroactively.
 
-Use the native CLI or Zig-built C ABI archive when external extension bundle loading is a requirement. Bundled extensions remain available where each binding documents them.
+C ABI archives bundle the compiler-runtime helpers they need, so the system C toolchain can link them. A loaded extension bundle must still match the host's OS, CPU, deployment target, and runtime ABI.
 
 ## Build from source only when needed
 

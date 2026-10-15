@@ -5,10 +5,10 @@ The Go package wraps Zova's C ABI through cgo. Go owns ergonomic handle and resu
 ## Install both layers
 
 ```sh
-go get github.com/ata-sesli/zova/bindings/go@v1.0.0
+go get github.com/ata-sesli/zova/bindings/go@v1.3.0
 ```
 
-Download the v1.0.0 C ABI archive for the target platform, then configure cgo:
+Download the v1.3.0 C ABI archive for the target platform, then configure cgo. Linux and macOS archives bundle the compiler-runtime helpers they need, so the system C toolchain can link them:
 
 ```sh
 CGO_CFLAGS="-I/absolute/path/to/zova-c-abi/include" \
@@ -52,8 +52,18 @@ Keep a transaction's related calls on the intended handle and use the binding's 
 
 Go covers relational statements, transactions, savepoints, in-memory databases, binary KV, objects, vectors, graphs, app events, format probe/migration, operational copies, SQL-native helpers, and lifecycle methods for extensions present in the process registry.
 
-Object, vector, and graph methods route through bound stores after open. Store create/bind/split/unbind management is CLI/native Zig-only in v1.0.0.
+Object, vector, and graph methods route through bound stores after open. Store create/bind/split/unbind management is CLI/native Zig-only in v1.3.0.
 
-Dynamic external extension loading and app-defined callback authoring are not high-level Go APIs. Bundled/process-provided extensions remain usable through documented lifecycle methods.
+Bundled/process-provided extensions remain usable through documented lifecycle methods. Since 1.2.0, Go also selects trusted `.zovaext` bundles at create/open:
+
+```go
+extensions := zova.ExtensionOptions{BundlePaths: []string{"./search.zovaext"}}
+db, err := zova.CreateWithExtensions("app.zova", extensions)
+// Reopen: zova.OpenWithExtensions(path, zova.OpenOptions{}, extensions).
+```
+
+Set `TrustStorePath` for a non-default trust store. Trust the bundle first with `zova extension trust ./search.zovaext`; opening never grants trust. Code and dependencies must match the host. `DB.Close` releases child handles before unloading libraries.
+
+App-defined scalar callbacks and explicit extension-data upgrades are not high-level Go APIs.
 
 Use the [C ABI chapter](./c-abi.md) when diagnosing link or ownership behavior beneath the Go wrapper.

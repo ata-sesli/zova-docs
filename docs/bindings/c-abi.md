@@ -24,15 +24,15 @@ Avoid holding application locks across Zova calls unless lock ordering is define
 
 ## Scalar SQL callbacks
 
-The v1.0.0 C ABI can register scalar SQL functions on Zova-owned connections. Callback arguments are borrowed only for the call, and Zova copies result bytes according to the result contract.
+The v1.3.0 C ABI can register scalar SQL functions on Zova-owned connections. Callback arguments are borrowed only for the call, and Zova copies result bytes according to the result contract.
 
 A callback must not re-enter the same `zova_database` handle. Re-entry can violate serialization and SQLite callback assumptions. If a callback needs external state, provide it through the documented user-data lifetime rather than global mutable state.
 
 ## Extensions and artifact choice
 
-Native Zig-built C ABI artifacts can verify, trust, supply, and load external `.zovaext` bundles. Generated-C snapshots retain source-compatible symbols but report dynamic loading as unavailable under Zig 0.16.
+C ABI artifacts can verify, trust, supply, and load external `.zovaext` bundles with `zova_database_create_with_extensions` and `zova_database_open_with_extensions`. Since 1.2.0, generated-C builds include the same loader as native Zig builds on Linux, macOS, and Windows.
 
-Choose the native archive when external bundles are required. Bundled extension lifecycle and ordinary storage APIs remain available where the artifact documents them.
+Since 1.3.0, a host that links plugin code into its own process can pass `zova_plugin_descriptor_v1` pointers to `zova_database_create_with_plugins`, `zova_database_open_with_plugins`, and `zova_database_open_for_extension_upgrade_with_plugins`, optionally together with trusted bundle paths. Linked descriptors need no bundle and no trust record. `zova_database_migrate_with_extensions` accepts the same bundles and descriptors for format migration. See the [Extension reference](../reference/extension-api.md#c-abi-host-surface).
 
 The release header is the authoritative symbol and struct contract. Do not copy declarations from examples into a separate local header.
 

@@ -15,7 +15,7 @@ export default function Home() {
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroCopy}>
-            <span className={styles.eyebrow}>Zova v1.0.0 · format 11</span>
+            <span className={styles.eyebrow}>Zova v1.3.0 · format 12</span>
             <h1>Local data, shaped for real applications.</h1>
             <p>Keep relational data in SQLite, then add transactional KV, content-addressed objects, exact vectors, and graph-aware relationships without introducing a server.</p>
             <div className={styles.actions}>
@@ -35,7 +35,7 @@ export default function Home() {
         <div><span>02</span><h2>Model</h2><p>Keep metadata relational; add specialized storage only where it helps.</p></div>
         <div><span>03</span><h2>Operate</h2><p>Back up, diagnose, compact, and salvage with explicit local workflows.</p></div>
       </section>
-      <section className={styles.install}><div><span>JavaScript</span><code>bun add zova-js</code></div><div><span>Rust</span><code>cargo add zova@1.0.0</code></div><div><span>Python</span><code>uv add zova==1.0.0</code></div><div><span>Go</span><code>go get github.com/ata-sesli/zova/bindings/go@v1.0.0</code></div></section>
+      <section className={styles.install}><div><span>JavaScript</span><code>bun add zova-js</code></div><div><span>Rust</span><code>cargo add zova@1.3.0</code></div><div><span>Python</span><code>uv add zova==1.3.0</code></div><div><span>Go</span><code>go get github.com/ata-sesli/zova/bindings/go@v1.3.0</code></div></section>
     </main>
   </Layout>;
 }

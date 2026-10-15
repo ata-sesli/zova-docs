@@ -18,7 +18,7 @@ Choose the highest-level binding that fits your application. Every binding uses 
 | Zig or Zova development | source package | build the native project with Zig |
 | Operations only | CLI archive | standalone executable |
 
-Use `zova-sys` only when a Rust application specifically needs the raw C ABI. Use a native Zig-built artifact when external `.zovaext` loading is required; generated-C package snapshots intentionally report dynamic loading as unavailable.
+Use `zova-sys` only when a Rust application specifically needs the raw C ABI. Since 1.2.0, every native package can load explicitly trusted `.zovaext` extension bundles; see [Extensions](../guides/extensions.md).
 
 ## Install or build for your language
 
@@ -35,23 +35,23 @@ npm install zova-js
   <TabItem value="rust" label="Rust">
 
 ```sh
-cargo add zova@1.0.0
+cargo add zova@1.3.0
 ```
 
   </TabItem>
   <TabItem value="python" label="Python">
 
 ```sh
-uv add zova==1.0.0
+uv add zova==1.3.0
 # or
-python -m pip install zova==1.0.0
+python -m pip install zova==1.3.0
 ```
 
   </TabItem>
   <TabItem value="go" label="Go">
 
 ```sh
-go get github.com/ata-sesli/zova/bindings/go@v1.0.0
+go get github.com/ata-sesli/zova/bindings/go@v1.3.0
 ```
 
   </TabItem>
@@ -86,7 +86,7 @@ db.exec("create table notes(id integer primary key, body text)");
 db.close();
 ```
 
-Electron, Deno, browser use of this native addon, musl Linux, and Windows arm64 are not claimed. Browser applications can use the separate experimental [`zova-wasm` package](../bindings/wasm.md) for SQL and binary KV.
+Electron, Deno, browser use of this native addon, musl Linux, and Windows arm64 are not claimed. Browser applications can use the separate experimental [`zova-wasm` package](../bindings/wasm.md) for SQL, binary KV, objects, exact vectors, and graphs.
 
 ## Rust
 
@@ -94,7 +94,7 @@ Or pin the version explicitly:
 
 ```toml
 [dependencies]
-zova = "=1.0.0"
+zova = "=1.3.0"
 ```
 
 The safe crate builds the bundled generated-C native layer. Consumers need Rust 1.79 or newer and a C compiler, but not Zig.
@@ -134,7 +134,7 @@ Use context managers so native handles close deterministically. Continue with th
 
 ## Go
 
-The Go package calls Zova through cgo. Download the v1.0.0 C ABI archive matching the target operating system and architecture, then point the build at its directories:
+The Go package calls Zova through cgo. Download the v1.3.0 C ABI archive matching the target operating system and architecture, then point the build at its directories:
 
 <Tabs groupId="operating-systems" defaultValue="macos-linux">
   <TabItem value="macos-linux" label="macOS / Linux">
@@ -161,7 +161,7 @@ Keep the Go module, header, and library on the same Zova version. See the [Go bi
 
 ## CLI and C ABI archives
 
-Download the target archive from the [v1.0.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.0.0). CLI and C ABI packages are separate artifacts.
+Download the target archive from the [v1.3.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.3.0). CLI and C ABI packages are separate artifacts.
 
 After extracting the CLI, verify it:
 
@@ -174,7 +174,7 @@ The C ABI archive contains `zova.h` and the static library. Add the include path
 
 ## Build from source
 
-Source builds require Zig 0.16.0 or newer and a C compiler:
+Source builds require Zig 0.17.0 or newer and a C compiler:
 
 ```sh
 zig build
@@ -190,7 +190,7 @@ Before integrating important data:
 1. Create a disposable database.
 2. Write and read one application row.
 3. Run `zova check --deep` with the matching CLI when available.
-4. Confirm the artifact reports v1.0.0.
+4. Confirm the artifact reports v1.3.0.
 5. Record the package and native artifact versions in the application build.
 
 Then follow [Build your first database](./first-database.md).

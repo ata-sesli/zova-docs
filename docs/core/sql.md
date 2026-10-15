@@ -99,6 +99,21 @@ The scalar functions and virtual tables are registered on SQLite connections ope
 
 This boundary is important when using pools, migration tools, or external analytics software: run Zova-specific queries through a Zova-owned connection and keep portable application SQL independent where practical.
 
+## Bundled SQLite modules
+
+Zova vendors its own SQLite build. Since 1.1.0 it enables these modules in native builds, language packages, and the WASM package:
+
+| Module | Use it for |
+|---|---|
+| FTS5 | full-text indexes over application text |
+| R-Tree | range queries over bounding boxes |
+| Geopoly | polygon queries built on R-Tree |
+| `carray` | binding a native array as a table-valued parameter |
+| Math functions | built-in `sqrt`, `pow`, `ln`, `sin`, and related SQL functions |
+| `dbstat` | read-only page usage, described below |
+
+`carray` takes native pointer bindings through SQLite's C interface. Enabling it does not add a high-level Zova array API to the bindings. These modules are guaranteed only on the SQLite bundled with Zova; an unrelated system SQLite build may omit them.
+
 ## Inspect page usage with dbstat
 
 Zova's bundled SQLite enables the read-only `dbstat` virtual table for storage diagnostics:

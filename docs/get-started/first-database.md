@@ -29,7 +29,7 @@ Create a Rust project and add Zova:
 ```sh
 cargo new zova-library
 cd zova-library
-cargo add zova@1.0.0
+cargo add zova@1.3.0
 ```
 
 Replace `src/main.rs` with the imports and database creation below:

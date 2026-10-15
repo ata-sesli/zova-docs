@@ -81,6 +81,14 @@ let object_id = writer.finish()?;
 
 Transfer progress, expected filenames, retry state, and ownership still belong in your SQL tables. The object writer is a storage primitive, not an upload protocol.
 
+## Objects and transactions
+
+Since 1.2.0, synchronous object writes, deletes, chunk writes, and assembly are operation-atomic and join a caller-owned transaction. With no active transaction, each operation runs in its own immediate transaction; inside one, it takes an internal savepoint. A failed operation undoes only its own chunks, manifests, and metadata. Earlier work in the caller's transaction survives, and Zova never commits or rolls back that transaction on the caller's behalf.
+
+This lets an object and the SQL row that references it commit together. Open a transaction with your binding's transaction helper, put the object, insert the row that stores its identity, and commit. A rollback of that transaction removes both the row and the object.
+
+The streaming `ObjectWriter` is the exception. It holds no transaction across `write` calls, so a writer on the main database still fails inside an active caller transaction. Stream the object first, then reference the resulting identity from SQL. A bound object store still allows the writer inside caller transactions.
+
 ## Read only the bytes you need
 
 Range reads avoid loading a complete object when an application needs a header, media segment, or page-aligned region. The request is expressed as an offset and length through the binding's range API.

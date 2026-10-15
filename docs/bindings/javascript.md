@@ -97,4 +97,22 @@ try {
 db.close();
 ```
 
+## Trusted extension bundles
+
+Since 1.2.0, both handle types accept trusted `.zovaext` bundles at create/open:
+
+```ts
+const extensions = { bundlePaths: ["./search.zovaext"] };
+const db = Database.create("app.zova", extensions);
+db.installExtension("search");
+db.close();
+const reopened = Database.open("app.zova", { readOnly: true, extensions });
+```
+
+`AsyncDatabase.create` and `AsyncDatabase.open` accept the same options. Set `trustStorePath` in the extension options for a non-default trust store. Trust the bundle first with `zova extension trust ./search.zovaext`; opening never grants trust or loads paths from database metadata. Native code and its dependencies must match the host. Closing releases callback state before unloading libraries.
+
+Extension authoring, application SQL callbacks, and explicit extension-data upgrades have no JavaScript wrapper.
+
+## Low-level graph surfaces
+
 Advanced opaque graph keys, topology scans, edge payloads, and fresh-build sessions remain stable low-level C ABI and raw `zova-sys` capabilities. Their omission from the high-level JavaScript API is deliberate.

@@ -22,7 +22,7 @@ JSON output includes `cli_json_version = 1`. Automation should consume JSON rath
 ```sh
 zova format app.zova
 zova format --json app.zova
-zova migrate app.zova app-format-11.zova
+zova migrate app.zova app-format-12.zova
 ```
 
 `format` is read-only and reports whether the source is current, migratable, unsupported legacy, or unsupported future. `migrate` performs an offline copy-forward migration into a new destination and verifies that destination by default. Add `--no-verify` only when verification is handled separately.
@@ -157,7 +157,7 @@ zova extension pack ./sample_ext --out ./sample_ext.zovaext
 zova extension verify --smoke ./sample_ext.zovaext
 ```
 
-This producer workflow is experimental in v1.0.0. Native extensions are trusted in-process code and require platform- and ABI-compatible builds.
+This producer workflow is experimental in v1.3.0. Native extensions are trusted in-process code and require platform- and ABI-compatible builds.
 
 ## Output and privacy contract
 

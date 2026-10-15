@@ -5,9 +5,9 @@ The Python package is a PyO3 extension backed by the safe Rust crate. It exposes
 ## Install and create a database
 
 ```sh
-uv add zova==1.0.0
+uv add zova==1.3.0
 # or
-python -m pip install zova==1.0.0
+python -m pip install zova==1.3.0
 ```
 
 ```python
@@ -63,12 +63,24 @@ with zova.Database.open("app.zova") as db:
     assert db.read_object_range(object_id, 0, 5) == b"hello"
 ```
 
-Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v1.0.0.
+Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v1.3.0.
 
 ## Packaging boundary
 
 Published stable-ABI wheels cover Linux and macOS x86_64/arm64 and Windows x86_64. Python 3.13 or newer is required; CPython 3.13 and 3.14 are tested. Matching wheels need no compiler, and no Python source distribution is published.
 
-The package build uses generated native sources. Bundled extensions such as `trgm` are available, but app-registered extension authoring, safe scalar callbacks, and dynamic `.zovaext` loading are not exposed as Python APIs. Use the CLI, C ABI, or a native host when those capabilities are required.
+The package build uses generated native sources. Bundled extensions such as `trgm` are available. Since 1.2.0, wheels also accept explicitly trusted `.zovaext` bundles:
+
+```python
+db = zova.Database.create("app.zova", extension_bundles=["./search.zovaext"])
+db.install_extension("search")
+db.close()
+db = zova.Database.open("app.zova", read_only=True,
+                        extension_bundles=["./search.zovaext"])
+```
+
+Both constructors accept `trust_store_path`; omit it for Zova's default store. Trust the bundle first with `zova extension trust ./search.zovaext`. Opening never grants trust or loads paths from the database. Native code and its dependencies must match the host. Owned statements keep their connection and libraries alive after `db.close()`.
+
+Extension authoring, scalar callbacks, and explicit extension-data upgrades are not Python APIs. Use the CLI, C ABI, or a native host when those capabilities are required.
 
 Read [Objects](../core/objects.md), [Vectors](../core/vectors.md), and [Graphs](../core/graphs.md) for behavior shared across bindings.

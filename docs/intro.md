@@ -4,8 +4,8 @@ Zova is an embedded database for applications that need more than rows but do no
 
 This combination is useful for document tools, local-first applications, desktop software, developer tools, and embedded services where metadata, files, embeddings, and relationships belong together. There is no daemon to start and no network protocol between the application and its data. The database is a `.zova` file opened directly by your process.
 
-:::info[Zova 1.0 compatibility]
-Zova 1.0.0 writes format 11. Opening never migrates a database. Released v0.26.1 format-9 databases and format-10 release-candidate databases can be migrated explicitly into a new format-11 destination; the source remains unchanged. Formats older than 9 are unsupported.
+:::info[Zova 1.3 compatibility]
+Zova 1.3.0 writes format 12, introduced in 1.2.0. Opening never migrates a database. Format-11 databases from Zova 1.0 and 1.1, released v0.26.1 format-9 databases, and format-10 release-candidate databases can be migrated explicitly into a new format-12 destination; the source remains unchanged. Formats older than 9 are unsupported.
 :::
 
 ## One database, five data shapes
@@ -86,7 +86,7 @@ Zova does not replace SQLite semantics:
 - SQL is SQLite SQL.
 - Locking and concurrent-handle behavior follow SQLite.
 - Transactions and savepoints remain connection-local.
-- Journal mode, synchronous mode, and auto-vacuum remain application choices; format-11 handles start with foreign-key enforcement enabled.
+- Journal mode, synchronous mode, and auto-vacuum remain application choices; format-12 handles start with foreign-key enforcement enabled.
 - Zova does not silently run `VACUUM` or rewrite your tables.
 
 Connections opened through Zova also register read-only helpers for vector distance, vector search, graph neighbors, and bounded graph walks. This lets specialized results join directly to application tables without exposing Zova's private schema.
@@ -101,7 +101,7 @@ Bound stores are a local operational choice. They are not remote storage, replic
 
 ## File-backed or in-memory
 
-Zova 1.0 also provides first-class in-memory databases across native bindings. They expose the same SQL, KV, object, vector, graph, transaction, backup/restore, and app-event behavior without a durable file. Each database is private to its handle and disappears when that handle closes.
+Since 1.0, Zova also provides first-class in-memory databases across native bindings. They expose the same SQL, KV, object, vector, graph, transaction, backup/restore, and app-event behavior without a durable file. Each database is private to its handle and disappears when that handle closes.
 
 Use in-memory mode for tests, disposable transformations, and process-local state. Use a file-backed database when data must survive process exit.
 

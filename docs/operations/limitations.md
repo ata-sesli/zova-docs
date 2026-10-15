@@ -1,10 +1,10 @@
 # Current limitations
 
-Zova 1.0.0 is an embedded SQLite-based storage engine with deliberately bounded specialized features. Evaluate these boundaries against the application before adopting it.
+Zova 1.3.0 is an embedded SQLite-based storage engine with deliberately bounded specialized features. Evaluate these boundaries against the application before adopting it.
 
 ## Retrieval and graph scale
 
-Vector search is an exact flat scan. Zova does not provide HNSW, IVFFlat, another ANN index, embedding generation, automatic quantization, or a BM25 abstraction.
+Core vector search is an exact flat scan. Zova core does not provide HNSW, IVFFlat, another ANN index, embedding generation, automatic quantization, or a BM25 abstraction. Approximate search is available only through the experimental USearch HNSW reference extension.
 
 Graph traversal is bounded local breadth-first search. Zova does not provide Cypher, GQL, Gremlin, SPARQL, distributed traversal, weighted path algorithms, or automatic graph extraction.
 
@@ -30,14 +30,14 @@ Calls through one database handle are serialized. Use multiple handles for actua
 
 ## Extensions and bindings
 
-Dynamic extensions are trusted in-process native code. High-level JavaScript, TypeScript, Rust, Python, and Go extension authoring, dynamic bundle loading, and safe scalar callback APIs are not included in v1.0.0. Extension authoring remains experimental, and generated-C package artifacts cannot portably load external bundles under Zig 0.16.
+Dynamic extensions are trusted in-process native code, not a sandbox. Native and generated-C hosts load explicitly trusted bundles on Linux, macOS, and Windows, and the Rust, Python, Go, and JavaScript bindings select bundles at create/open. Those bindings do not wrap extension authoring, scalar callbacks, explicit extension-data upgrades, linked plugin descriptors, or extension-aware migration; use the C ABI or Zig for those. Extension authoring beyond the common C plugin ABI, and the reference extensions, remain experimental. A single graph edge payload larger than the 1 MiB data-service page budget cannot be read through the plugin data service.
 
 Store-management APIs are native Zig and CLI-only. Diagnostics and salvage are CLI-first; bindings should not parse human output as a library contract.
 
-The native JavaScript and TypeScript package does not claim Electron, Deno, browser use, musl Linux, or Windows arm64. The separate experimental `zova-wasm` browser package exposes SQL and KV only, not full native parity. Swift bindings are not published. Python wheels cover the documented Linux/macOS x86_64/arm64 and Windows x86_64 CPython 3.13/3.14 matrix; free-threaded builds and source distributions are not published.
+The native JavaScript and TypeScript package does not claim Electron, Deno, browser use, musl Linux, or Windows arm64. The separate experimental `zova-wasm` browser package exposes SQL, KV, transactions, prepared statements, objects, exact vectors, and graphs, not full native parity. Swift bindings are not published. Python wheels cover the documented Linux/macOS x86_64/arm64 and Windows x86_64 CPython 3.13/3.14 matrix; free-threaded builds and source distributions are not published.
 
 ## Recovery and compatibility
 
-Zova does not perform in-place repair or overwrite destinations for backup, compact, restore, conversion, salvage, or format migration. Opening never migrates. Formats 9 and 10 migrate explicitly into a new format-11 destination; older formats and downgrades are unsupported.
+Zova does not perform in-place repair or overwrite destinations for backup, compact, restore, conversion, salvage, or format migration. Opening never migrates. Formats 9, 10, and 11 migrate explicitly into a new format-12 destination; older formats and downgrades are unsupported.
 
 If any boundary is a critical product requirement rather than a tolerable trade-off, keep SQLite alone or choose a specialized system that provides it today.
