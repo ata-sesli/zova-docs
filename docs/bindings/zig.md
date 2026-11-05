@@ -33,6 +33,8 @@ The Zig layer includes the widest current surface:
 - register application-provided extensions in the process registry;
 - load explicitly trusted local extension bundles;
 - use opaque graph keys, edge payloads, prepared keyed graph builds, topology scans, and atomic fresh-build sessions;
+- reclaim free pages with `Database.reclaimSpace`, read seekable objects with `Database.objectSeekableReader`, and pass a `progress` callback in `MigrateOptions`, `BackupOptions`, or `CompactOptions`;
+- plan a migration without running it with `zova.planMigration`;
 - build extension bridges against native APIs; and
 - access low-level profiling and debugging paths intended for Zova development.
 

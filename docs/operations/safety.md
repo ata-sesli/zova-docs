@@ -9,6 +9,7 @@ Operational safety still depends on application choices: where copies live, how 
 ```sh
 zova backup app.zova app.backup.zova
 zova compact app.zova app.compact.zova
+zova reclaim app.zova
 zova restore app.backup.zova app.restored.zova
 ```
 
@@ -16,9 +17,60 @@ zova restore app.backup.zova app.restored.zova
 |---|---|---|
 | `backup` | SQLite online backup API | a consistent operational snapshot |
 | `compact` | SQLite `VACUUM INTO` | a verified copy that reclaims unused pages |
+| `reclaim` | SQLite incremental vacuum, in place | returning free pages to the filesystem without a copy |
 | `restore` | copy backup into a new destination | recovery without overwriting either artifact |
 
 Backup does not promise the smallest possible file. Compact is not a substitute for backup history. Restore does not overwrite a damaged database in place; it produces a separate candidate that can be checked before cutover.
+
+## Reclaim free pages in place
+
+Since 1.4.0, files Zova creates, the stores that `split` creates, and every member of `compact` output use SQLite incremental auto-vacuum. Zova never vacuums automatically: deleted pages stay on the freelist until you release them.
+
+```sh
+zova reclaim app.zova
+zova reclaim --max-pages 100000 --json app.zova
+```
+
+`reclaim` releases free pages from the main database and every bound store in incremental mode. Each step is its own short write transaction of at most 1024 pages, so readers and writers are blocked only between steps; `--max-pages` caps the total for one run. The report lists, per member, the auto-vacuum mode, page size, pages and bytes released, and free pages left. Reclaim changes no logical data.
+
+| Operation | Resulting auto-vacuum mode |
+|---|---|
+| create a database or store, `split` | incremental |
+| `compact` (each member) | incremental |
+| `migrate`, `backup`, `restore`, SQLite conversion | unchanged from the source |
+
+A member in `none` mode, which includes every database migrated from an earlier format, releases nothing; `reclaim` points it at `compact`. Run `zova compact` once and use the compacted copy to switch the file to incremental mode.
+
+The bindings expose the same operation as `reclaim_space` (Rust and Python), `ReclaimSpace` (Go), and `reclaimSpace` (JavaScript, sync and async); Zig uses `Database.reclaimSpace` and the C ABI `zova_database_reclaim`. Each returns one entry per member file. Calling it inside an open transaction fails.
+
+## Progress and cancellation
+
+Since 1.4.0, `backup`, `compact`, and `migrate` report progress. On a terminal, the CLI shows one progress line on stderr; `--progress` writes plain progress lines when stderr is not a terminal; and `--json --progress` writes one JSON event per line to stderr while the final result object stays on stdout:
+
+```json
+{"cli_json_version":1,"event":"progress","command":"migrate","phase":"copy","member":"main","done":1024,"total":4113}
+```
+
+| Phase | Member | Unit |
+|---|---|---|
+| `copy` | `main`, `object_store`, `vector_store`, `graph_store` | SQLite pages of the source member |
+| `migrate` | as for `copy` | format migration steps |
+| `verify` | `null` (whole set) | stored objects, chunks, vectors, and KV entries |
+| `publish` | `null` (whole set) | member files, bound stores first |
+
+Output is throttled to whole-percent changes. `compact` runs `VACUUM INTO` as one statement, so its main copy reports only its start and end.
+
+Applications pass a progress callback and cancel from it:
+
+| Binding | Backup and compact | Migrate | Cancel |
+|---|---|---|---|
+| Rust | `backup_to_with_progress`, `compact_to_with_progress` | `migrate_database_with_progress` | return `ControlFlow::Break(())` |
+| Go | `BackupToWithProgress`, `CompactToWithProgress` | `MigrateDatabaseWithProgress` | return an error |
+| Python | `progress=` on `backup_to`, `compact_to` | `progress=` on `migrate_database` | raise; the exception is re-raised |
+| JavaScript | `{ progress, signal }` on `AsyncDatabase.backupTo`, `compactTo` | `{ progress, signal }` on `AsyncDatabase.migrateDatabase` | abort the `AbortSignal` or throw |
+| C | `zova_database_backup_with_progress`, `zova_database_compact_with_progress` | `zova_database_migrate_with_progress` | return non-zero |
+
+A cancelled operation fails with `ZOVA_INTERRUPTED` (the binding's equivalent error) and publishes nothing: a cancelled migration leaves the source unchanged and creates no destination files, and a cancelled backup or compaction removes its destination.
 
 ## Verify a recovery path, not just a file
 
@@ -53,7 +105,7 @@ Before a format upgrade, split, migration, extension change, or large deletion:
 1. Make a new backup.
 2. Restore and deep-check it.
 3. Record the Zova version and required extension artifacts.
-4. Estimate destination disk space.
+4. Estimate destination disk space; for a migration, run `zova migrate --dry-run` first.
 5. Define which paths the application will use after success.
 6. Define the rollback condition before starting.
 7. Run `zova check --deep` after the change.

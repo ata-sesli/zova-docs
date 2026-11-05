@@ -2,27 +2,28 @@
 
 Zova reports separate package, C ABI, SQLite, and storage-format versions. Changing one does not imply a change in the others.
 
-| Version | Zova 1.3.0 |
+| Version | Zova 1.4.0 |
 |---|---|
-| Package | `1.3.0` |
-| C ABI | `1.3.0` |
+| Package | `1.4.0` |
+| C ABI | `1.4.0` |
 | Vendored SQLite | `3.53.4` |
-| Zova storage format | `12` |
+| Zova storage format | `13` |
 
 ## Storage promise
 
 Every Zova 1.x release can migrate databases created by every earlier 1.x release. Format 9—the format written by released Zova 0.26.1—is the only pre-1.0 format guaranteed a migration into 1.x.
 
-Zova 1.0.0 and 1.1.0 wrote format 11. Zova 1.2.0 introduced format 12 for transactional vector change tracking, and 1.3.0 keeps it, so databases written by 1.2.0 open unchanged.
+Zova 1.0.0 and 1.1.0 wrote format 11. Zova 1.2.0 introduced format 12 for transactional vector change tracking, and 1.3.0 kept it. Zova 1.4.0 introduced format 13, which adds a chunk-reference index for fast object deletion. Databases written by 1.3.0 need one explicit migration before 1.4.0 opens them.
 
-| Source format | v1.3.0 classification | Action |
+| Source format | v1.4.0 classification | Action |
 |---|---|---|
-| 12 | current | open normally |
-| 11 | migratable | explicitly migrate 11 → 12 |
-| 10 | migratable | explicitly migrate 10 → 11 → 12 |
-| 9 | migratable | explicitly migrate 9 → 10 → 11 → 12 |
+| 13 | current | open normally |
+| 12 | migratable | explicitly migrate 12 → 13 |
+| 11 | migratable | explicitly migrate 11 → 12 → 13 |
+| 10 | migratable | explicitly migrate 10 → 11 → 12 → 13 |
+| 9 | migratable | explicitly migrate 9 → 10 → 11 → 12 → 13 |
 | 8 or older | unsupported legacy | export with a compatible older release |
-| newer than 12 | unsupported future | use a compatible newer Zova release |
+| newer than 13 | unsupported future | use a compatible newer Zova release |
 
 Opening a database never migrates it. Current files open; migratable files return `MigrationRequired`; legacy and future files return distinct errors. Each path leaves the source byte-identical.
 
@@ -32,10 +33,15 @@ Migration is offline and copy-forward. It writes a new destination and preserves
 
 ```sh
 zova format app.zova
-zova migrate app.zova app-format-12.zova
+zova migrate --dry-run app.zova app-format-13.zova
+zova migrate app.zova app-format-13.zova
 ```
 
-`zova format` reports the source format, current format, earliest migratable format, compatibility class, and recommended action. Add `--json` for automation. `zova migrate` verifies the destination by default; `--no-verify` skips that final reopen.
+`zova format` reports the source format, current format, earliest migratable format, compatibility class, and recommended action. Add `--json` for automation. `zova migrate` verifies the destination by default; `--no-verify` skips that final reopen. On a terminal it shows a progress line; see [Progress and cancellation](./safety.md#progress-and-cancellation).
+
+Since 1.4.0, `--dry-run` runs the same classification, destination, bound-store, and extension checks as a real migration without creating or changing anything. It reports every file the migration would write, each member's page size, page count, and free-page count, the bytes the copy writes, the free space at the destination, and whether every installed extension is bundled or supplied with `--extension`. It exits `0` when the migration would pass those checks, and otherwise with the code the migration would return, naming the first failing check (for example `DestinationExists`, `ExtensionUnavailable`, or `InsufficientSpace`). With `--json`, the report is one object with `"dry_run": true` and `"status"` set to `"ok"` or `"would_fail"`.
+
+Migration copies every page, free pages included. When the dry run reports many free bytes, `zova compact` before migrating produces a smaller copy. Treat the reported copy size as a lower bound; a dry run does not lock the source or run verification, so a real migration can still fail on a write or verification error.
 
 Equivalent probe and migrate APIs are available through the C ABI, Rust, Python, Go, and JavaScript bindings. Keep a backup before migrating.
 
@@ -47,13 +53,14 @@ Equivalent probe and migrate APIs are available through the C ABI, Rust, Python,
 - Migration takes an offline write lock while it plans and copies the source set.
 - User SQL schema and rows, public identities, objects, vectors, graphs, extension records, store identities, and ordering are preserved.
 - Extension-owned tables pass through unchanged and face normal extension validation when the destination opens.
-- Plain migration refuses a database whose installed extensions are not bundled with Zova, and publishes nothing. Since 1.3.0, the C ABI's `zova_database_migrate_with_extensions` accepts the same trusted bundle paths and linked plugin descriptors as open. The high-level bindings do not wrap it yet.
+- Plain migration refuses a database whose installed extensions are not bundled with Zova, and publishes nothing. Since 1.3.0, the C ABI's `zova_database_migrate_with_extensions` accepts the same trusted bundle paths and linked plugin descriptors as open. Since 1.4.0, the bindings accept the same bundle paths and trust store as their open calls: `migrate_database_with_extensions` in Rust, `MigrateDatabaseWithExtensions` in Go, `extension_bundles` and `trust_store_path` on Python's `migrate_database`, and an `extensions` argument to JavaScript `migrateDatabase`. Linked plugin descriptors remain a C ABI feature.
+- Migration keeps the source file's SQLite auto-vacuum mode. A migrated file therefore stays in `none` mode; run `zova compact` and use the compacted copy to switch it to incremental mode for [in-place reclaim](./safety.md#reclaim-free-pages-in-place).
 - Downgrade migration is unsupported.
 
 An interrupted run can leave destination reservations, published bound stores, and a `<destination>.migration-recovery/` directory. Stop every process using those paths, keep the destination and recovery directory together, then run the matching release's ownership-checking recovery script:
 
 ```sh
-python3 scripts/recover-migration.py /path/to/app-format-12.zova
+python3 scripts/recover-migration.py /path/to/app-format-13.zova
 ```
 
 On Windows, use `python` if `python3` is unavailable. The script removes only outputs proven to belong to that migration. If it refuses, preserve the files and investigate—do not force-delete or hand-publish staged files.
@@ -62,4 +69,4 @@ On Windows, use `python` if `python3` is unavailable. The script removes only ou
 
 Use the package, C header, static library, CLI, generated-C companion, and extensions from the same release. Go requires a matching C ABI archive. Since 1.2.0, native and generated-C artifacts both load trusted dynamic extensions on Linux, macOS, and Windows. A bundle must match the host's OS, CPU, deployment target, and runtime ABI.
 
-Read the [v1.3.0 release notes](../reference/release-notes-1.3.0.md), the [v1.2.0 release notes](../reference/release-notes-1.2.0.md), and the [API stability contract](./api-stability.md) before upgrading production applications.
+Read the [v1.4.0 release notes](../reference/release-notes-1.4.0.md) and the [API stability contract](./api-stability.md) before upgrading production applications.

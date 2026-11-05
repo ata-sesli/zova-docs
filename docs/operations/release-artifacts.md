@@ -16,7 +16,7 @@ Zova publishes several distribution shapes because language bindings and deploym
 | Python wheel | using a supported CPython/platform combination | none beyond Python |
 | Go module + C ABI | using the cgo wrapper | Go 1.22+, cgo, matching native archive |
 
-Download native archives from the [v1.3.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.3.0). Match version, operating system, architecture, and artifact type.
+Download native archives from the [v1.4.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.4.0). Match version, operating system, architecture, and artifact type.
 
 ## Verify the package boundary
 

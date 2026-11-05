@@ -5,9 +5,9 @@ The Python package is a PyO3 extension backed by the safe Rust crate. It exposes
 ## Install and create a database
 
 ```sh
-uv add zova==1.3.0
+uv add zova==1.4.0
 # or
-python -m pip install zova==1.3.0
+python -m pip install zova==1.4.0
 ```
 
 ```python
@@ -63,7 +63,19 @@ with zova.Database.open("app.zova") as db:
     assert db.read_object_range(object_id, 0, 5) == b"hello"
 ```
 
-Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v1.3.0.
+Since 1.4.0, the package also provides `reclaim_space()`, `object_seekable_reader()`, a `progress=` callback on `backup_to`, `compact_to`, and `migrate_database`, and `extension_bundles` and `trust_store_path` on `migrate_database`. Raising from a progress callback cancels the operation and re-raises the exception.
+
+```python
+with zova.Database.open("app.zova") as db:
+    with db.object_seekable_reader(object_id) as reader:
+        reader.seek(1024 * 1024)
+        part = reader.read(64 * 1024)
+
+    for member in db.reclaim_space():
+        print(member.member, member.pages_released, member.free_pages_left)
+```
+
+Existing specialized APIs route through optional bound stores after open. Store creation, binding, splitting, and unbinding remains CLI/native Zig-only in v1.4.0.
 
 ## Packaging boundary
 

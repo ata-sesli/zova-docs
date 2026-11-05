@@ -1,6 +1,6 @@
 # Extension reference
 
-An extension combines a validated manifest, process-provided native code, lifecycle hooks, and private tables under a reserved prefix. This page records the v1.3.0 bundle and host contract. Bundled lifecycle management and the common C plugin ABI v1 are supported surfaces; legacy Zig bundle production and the reference extensions remain experimental. Read the [Extensions guide](../guides/extensions.md) first for the trust model and deployment flow.
+An extension combines a validated manifest, process-provided native code, lifecycle hooks, and private tables under a reserved prefix. This page records the v1.4.0 bundle and host contract. Bundled lifecycle management and the common C plugin ABI v1 are supported surfaces; legacy Zig bundle production and the reference extensions remain experimental. Read the [Extensions guide](../guides/extensions.md) first for the trust model and deployment flow.
 
 ## Bundle layout
 
@@ -104,7 +104,7 @@ Drop also runs inside a savepoint:
 5. Validate core private schema.
 6. Release the savepoint.
 
-If the hook leaves `_zova_ext_<name>_*` objects behind, drop fails and the metadata remains installed. Enable, disable, and optional-installed extension states are not part of v1.3.0.
+If the hook leaves `_zova_ext_<name>_*` objects behind, drop fails and the metadata remains installed. Enable, disable, and optional-installed extension states are not part of v1.4.0.
 
 ## Storage rules
 
@@ -173,7 +173,7 @@ Since 1.2.0, hooks can negotiate host services by ID, version, and minimum struc
 | Data | graph node/edge scans, keyed batches, adjacency, and vector metadata, reads, and scans |
 | Storage | parameterized reads and writes to the plugin's own `main._zova_ext_<name>_*` tables |
 | Operations | register typed scalar or streaming table SQL operations |
-| Vector maintenance | snapshot-visible vector revisions and bounded change history (format 12) |
+| Vector maintenance | snapshot-visible vector revisions and bounded change history (since format 12) |
 
 Related calls in one hook share a host-owned savepoint with pinned main and bound-store snapshots. It joins a caller transaction, sees the caller's earlier writes, and never commits it. Plugins must not issue transaction commands or mutate authoritative data through SQL. A plugin's read-only operations may also query application tables in `main` through the query service.
 
@@ -239,7 +239,7 @@ zova_status status = zova_database_open_with_plugins(&request);
 
 `zova_database_migrate_with_extensions` migrates a database whose installed extensions are not bundled with Zova, accepting the same bundle paths and linked descriptors as open. Plain `zova_database_migrate` still refuses such a database and publishes nothing.
 
-These 1.3.0 functions are declared by raw `zova-sys` but not wrapped by the safe Rust, Python, Go, or JavaScript APIs.
+The linked-descriptor functions are declared by raw `zova-sys` but not wrapped by the safe Rust, Python, Go, or JavaScript APIs. Since 1.4.0, those bindings do wrap migration with trusted bundle paths; see [Compatibility](../operations/compatibility.md#migration-rules).
 
 The C ABI also supports controlled scalar SQL callbacks. Callback arguments are borrowed for the call, result bytes are copied, and callbacks must not re-enter the same database handle.
 
@@ -247,4 +247,4 @@ Since 1.2.0, generated-C package builds load external `.zovaext` bundles with th
 
 ## Current non-goals
 
-The v1.3.0 contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.
+The v1.4.0 contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.

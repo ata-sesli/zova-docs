@@ -61,7 +61,19 @@ console.log(bytes.byteLength);
 await db.close();
 ```
 
-Queued operations include backup, compact, restore, format probe/migration, KV and event operations, vector batches and searches, and graph batches and walks. Async transaction callbacks and prepared statement handles are not exposed.
+Queued operations include backup, compact, restore, `reclaimSpace`, format probe/migration, KV and event operations, vector batches and searches, and graph batches and walks.
+
+Since 1.4.0, `AsyncDatabase.backupTo`, `compactTo`, and `migrateDatabase` take `{ progress, signal }` options. Abort the signal or throw from the callback to cancel. The callback runs on the event loop after the native work reports an event, so cancellation takes effect at the next event.
+
+```ts
+const controller = new AbortController();
+await db.backupTo("app.backup.zova", true, {
+  progress: (event) => console.log(event.phase, event.done, event.total),
+  signal: controller.signal,
+});
+```
+
+Both facades also provide `reclaimSpace({ maxPages, stepPages })` and an `ObjectSeekableReader` for seekable, chunk-verified reads: `Database.objectSeekableReader(id)` with `read`/`seek`, and `AsyncDatabase.objectSeekableReader(id)` whose `readAsync`/`seekAsync` run on the worker pool in call order. Close each reader with `close()`. `migrateDatabase(source, destination, verify, extensions)` accepts the same `ExtensionOptions` as `Database.open`. Async transaction callbacks and prepared statement handles are not exposed.
 
 ## Data mappings
 

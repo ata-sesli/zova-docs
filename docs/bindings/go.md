@@ -5,10 +5,10 @@ The Go package wraps Zova's C ABI through cgo. Go owns ergonomic handle and resu
 ## Install both layers
 
 ```sh
-go get github.com/ata-sesli/zova/bindings/go@v1.3.0
+go get github.com/ata-sesli/zova/bindings/go@v1.4.0
 ```
 
-Download the v1.3.0 C ABI archive for the target platform, then configure cgo. Linux and macOS archives bundle the compiler-runtime helpers they need, so the system C toolchain can link them:
+Download the v1.4.0 C ABI archive for the target platform, then configure cgo. Linux and macOS archives bundle the compiler-runtime helpers they need, so the system C toolchain can link them:
 
 ```sh
 CGO_CFLAGS="-I/absolute/path/to/zova-c-abi/include" \
@@ -52,7 +52,20 @@ Keep a transaction's related calls on the intended handle and use the binding's 
 
 Go covers relational statements, transactions, savepoints, in-memory databases, binary KV, objects, vectors, graphs, app events, format probe/migration, operational copies, SQL-native helpers, and lifecycle methods for extensions present in the process registry.
 
-Object, vector, and graph methods route through bound stores after open. Store create/bind/split/unbind management is CLI/native Zig-only in v1.3.0.
+Since 1.4.0, Go also provides `ReclaimSpace`, `ObjectSeekableReader`, `BackupToWithProgress`, `CompactToWithProgress`, `MigrateDatabaseWithProgress`, and `MigrateDatabaseWithExtensions(source, destination, options, extensions)`. A progress callback returns an error to cancel. The seekable reader is an `io.ReadSeeker` and `io.Closer`:
+
+```go
+reader, err := db.ObjectSeekableReader(objectID)
+if err != nil {
+    log.Fatal(err)
+}
+defer reader.Close()
+http.ServeContent(w, r, "video.mp4", time.Time{}, reader)
+```
+
+`ReclaimSpace()` returns one `ReclaimedMember` per member file with `PagesReleased` and `FreePagesLeft`; pass `ReclaimOptions{MaxPages: n}` to cap one call.
+
+Object, vector, and graph methods route through bound stores after open. Store create/bind/split/unbind management is CLI/native Zig-only in v1.4.0.
 
 Bundled/process-provided extensions remain usable through documented lifecycle methods. Since 1.2.0, Go also selects trusted `.zovaext` bundles at create/open:
 

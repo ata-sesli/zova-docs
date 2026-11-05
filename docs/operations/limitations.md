@@ -1,6 +1,6 @@
 # Current limitations
 
-Zova 1.3.0 is an embedded SQLite-based storage engine with deliberately bounded specialized features. Evaluate these boundaries against the application before adopting it.
+Zova 1.4.0 is an embedded SQLite-based storage engine with deliberately bounded specialized features. Evaluate these boundaries against the application before adopting it.
 
 ## Retrieval and graph scale
 
@@ -30,7 +30,7 @@ Calls through one database handle are serialized. Use multiple handles for actua
 
 ## Extensions and bindings
 
-Dynamic extensions are trusted in-process native code, not a sandbox. Native and generated-C hosts load explicitly trusted bundles on Linux, macOS, and Windows, and the Rust, Python, Go, and JavaScript bindings select bundles at create/open. Those bindings do not wrap extension authoring, scalar callbacks, explicit extension-data upgrades, linked plugin descriptors, or extension-aware migration; use the C ABI or Zig for those. Extension authoring beyond the common C plugin ABI, and the reference extensions, remain experimental. A single graph edge payload larger than the 1 MiB data-service page budget cannot be read through the plugin data service.
+Dynamic extensions are trusted in-process native code, not a sandbox. Native and generated-C hosts load explicitly trusted bundles on Linux, macOS, and Windows, and the Rust, Python, Go, and JavaScript bindings select bundles at create/open. Since 1.4.0 they also migrate databases with non-bundled extensions installed. Those bindings do not wrap extension authoring, scalar callbacks, explicit extension-data upgrades, or linked plugin descriptors; use the C ABI or Zig for those. Extension authoring beyond the common C plugin ABI, and the reference extensions, remain experimental. A single graph edge payload larger than the 1 MiB data-service page budget cannot be read through the plugin data service.
 
 Store-management APIs are native Zig and CLI-only. Diagnostics and salvage are CLI-first; bindings should not parse human output as a library contract.
 
@@ -38,6 +38,10 @@ The native JavaScript and TypeScript package does not claim Electron, Deno, brow
 
 ## Recovery and compatibility
 
-Zova does not perform in-place repair or overwrite destinations for backup, compact, restore, conversion, salvage, or format migration. Opening never migrates. Formats 9, 10, and 11 migrate explicitly into a new format-12 destination; older formats and downgrades are unsupported.
+Zova does not perform in-place repair or overwrite destinations for backup, compact, restore, conversion, salvage, or format migration. Opening never migrates. Formats 9 through 12 migrate explicitly into a new format-13 destination; older formats and downgrades are unsupported. Zova 1.3.0 and earlier cannot open format-13 files.
+
+A seekable or partial range read verifies each chunk it returns, not the whole-object hash. Read the complete object when the full identity must be checked.
+
+On macOS, the first large write into a nearly empty incremental auto-vacuum file can take longer to commit: measured cost ranged from about 5% on an internal disk to about 60–75% on an external disk. Once the file holds data, the cost matches a file without auto-vacuum.
 
 If any boundary is a critical product requirement rather than a tolerable trade-off, keep SQLite alone or choose a specialized system that provides it today.

@@ -1,6 +1,6 @@
 # API stability
 
-Zova 1.0.0 established the stable native 1.x contract, and later 1.x releases, currently 1.3.0, extend the implementation without weakening it. Documented native APIs preserve public names, argument meanings, status and error categories, ownership rules, transaction behavior, deterministic ordering, and documented thread-safety guarantees throughout 1.x.
+Zova 1.0.0 established the stable native 1.x contract, and later 1.x releases, currently 1.4.0, extend the implementation without weakening it. Documented native APIs preserve public names, argument meanings, status and error categories, ownership rules, transaction behavior, deterministic ordering, and documented thread-safety guarantees throughout 1.x.
 
 Additive APIs may appear in 1.x. Removing a documented API or changing accepted data, ownership, ordering, or successful behavior requires a new major version unless the old behavior is a correctness or safety defect.
 
@@ -19,7 +19,10 @@ Binding coverage intentionally differs:
 | Objects, exact vectors, public graph API | Yes | Yes | Yes | Yes | Yes | Yes |
 | Opaque graph keys, payloads, scans, fresh builds | Yes | Yes | raw `zova-sys` | No | No | No |
 | Trusted `.zovaext` bundle selection at create/open | Yes | Yes | Yes | Yes | Yes | Yes |
-| Linked plugin descriptors, extension-aware migration | Yes | Yes | raw `zova-sys` | No | No | No |
+| Migration with trusted extension bundles | Yes | Yes | Yes | Yes | Yes | Yes |
+| In-place free-page reclaim, seekable object reader | Yes | Yes | Yes | Yes | Yes | Yes |
+| Progress and cancellation for backup, compact, migrate | Yes | Yes | Yes | Yes | Yes | async only |
+| Linked plugin descriptors | Yes | Yes | raw `zova-sys` | No | No | No |
 | Store create, bind, and split management | Zig/CLI | selected operations | No | No | No | No |
 
 The supported low-level graph publication APIs are deliberately not high-level wrappers.
@@ -28,7 +31,7 @@ The supported low-level graph publication APIs are deliberately not high-level w
 
 C inputs are borrowed for the call unless documented otherwise. Owned outputs must be released with their matching free function. Handles become invalid after successful terminal cleanup.
 
-C status numbers keep their meanings throughout 1.x. Bindings preserve the underlying category in language-native errors. Batch operations are atomic even inside caller-owned transactions, where Zova uses an internal savepoint. Since 1.2.0, synchronous object writes, deletes, chunk writes, and assembly are operation-atomic the same way: a failure undoes only that operation, and the caller's transaction is never committed or rolled back on its behalf. The streaming object writer is the exception described in [Objects](../core/objects.md#objects-and-transactions).
+C status numbers keep their meanings throughout 1.x. Additive statuses can appear: 1.4.0 adds `ZOVA_INTERRUPTED` (18) for cancelled operations, so code that switches over every status should handle it. Bindings preserve the underlying category in language-native errors. Batch operations are atomic even inside caller-owned transactions, where Zova uses an internal savepoint. Since 1.2.0, synchronous object writes, deletes, chunk writes, and assembly are operation-atomic the same way: a failure undoes only that operation, and the caller's transaction is never committed or rolled back on its behalf. The streaming object writer is the exception described in [Objects](../core/objects.md#objects-and-transactions).
 
 Scoped transaction and savepoint helpers roll back on every exit path, including an unwinding panic in Rust, before the connection lock is released. If a rollback itself fails, that handle is retired and later calls on it fail with a documented error; open a new handle.
 

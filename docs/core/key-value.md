@@ -51,4 +51,4 @@ Treat both namespace and key as opaque bytes. Zova does not impose a text encodi
 
 ## Storage format
 
-KV storage first appeared in format 10. Zova 1.3 writes format 12. Format-11 databases from Zova 1.0 and 1.1 migrate explicitly to format 12, and a released v0.26.1 format-9 database migrates through the registered 9 → 10 → 11 → 12 sequence; opening never performs that migration automatically. See [Compatibility](../operations/compatibility.md).
+KV storage first appeared in format 10. Zova 1.4 writes format 13. Databases from earlier 1.x releases migrate explicitly to format 13, and a released v0.26.1 format-9 database migrates through the registered 9 → 10 → 11 → 12 → 13 sequence; opening never performs that migration automatically. See [Compatibility](../operations/compatibility.md).

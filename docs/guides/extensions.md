@@ -192,7 +192,7 @@ zova extension verify --smoke ./sample_ext.zovaext
 
 The smoke verification loads the bundle, creates a temporary database, installs the extension, runs its check hook, and reopens the database with the same bundle. It is a packaging and lifecycle check, not a substitute for extension-specific tests.
 
-The bundle producer and legacy Zig descriptors remain experimental, not a second stable ABI. There is no high-level JavaScript, TypeScript, Python, or Go authoring SDK in v1.3.0.
+The bundle producer and legacy Zig descriptors remain experimental, not a second stable ABI. There is no high-level JavaScript, TypeScript, Python, or Go authoring SDK in v1.4.0.
 
 ## Runtime artifact differences
 

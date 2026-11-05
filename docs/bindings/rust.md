@@ -5,7 +5,7 @@ The `zova` crate is the normal safe Rust interface. It wraps database, statement
 ## Install and open
 
 ```sh
-cargo add zova@1.3.0
+cargo add zova@1.4.0
 ```
 
 ```rust
@@ -73,7 +73,21 @@ The safe crate covers:
 - same-process app events; and
 - backup, compact, restore, and bundled extension lifecycle.
 
-After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only in v1.3.0.
+Since 1.4.0, the crate also covers:
+
+- `reclaim_space(ReclaimOptions::default())`, returning one `ReclaimedMember` per member file with `pages_released` and `free_pages_left`;
+- `object_seekable_reader(id)`, a `Read + Seek` reader for range serving, plus `object_seekable_reader_owned` and `SharedDatabase::object_seekable_reader`;
+- `backup_to_with_progress`, `compact_to_with_progress`, and `migrate_database_with_progress`, whose callback returns `ControlFlow::Break(())` to cancel; and
+- `migrate_database_with_extensions(source, destination, options, &extensions)` for databases with non-bundled extensions installed.
+
+```rust
+use zova::ReclaimOptions;
+
+let members = db.reclaim_space(ReclaimOptions::default())?;
+println!("{} pages released", members[0].pages_released);
+```
+
+After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only in v1.4.0.
 
 ## Native packaging and extensions
 

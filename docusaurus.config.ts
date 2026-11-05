@@ -24,7 +24,8 @@ const config: Config = {
         routeBasePath: 'docs',
         lastVersion: 'current',
         versions: {
-          current: {label: 'v1.3.0', path: ''},
+          current: {label: 'v1.4.0', path: ''},
+          '1.3.0': {label: 'v1.3.0'},
           '1.1.0': {label: 'v1.1.0'},
           '0.26.1': {label: 'v0.26.1'},
           '0.24.0': {label: 'v0.24.0'},
@@ -48,7 +49,7 @@ const config: Config = {
       logo: {alt: 'Zova feather logo', src: 'img/zova-logo.png'},
       items: [
         {type: 'docSidebar', sidebarId: 'docsSidebar', label: 'Docs', position: 'left'},
-        {to: '/docs/reference/release-notes-1.3.0', label: 'Release notes', position: 'left'},
+        {to: '/docs/reference/release-notes-1.4.0', label: 'Release notes', position: 'left'},
         {type: 'docsVersionDropdown', position: 'right'},
         {
           href: 'https://github.com/ata-sesli/zova',

@@ -35,23 +35,23 @@ npm install zova-js
   <TabItem value="rust" label="Rust">
 
 ```sh
-cargo add zova@1.3.0
+cargo add zova@1.4.0
 ```
 
   </TabItem>
   <TabItem value="python" label="Python">
 
 ```sh
-uv add zova==1.3.0
+uv add zova==1.4.0
 # or
-python -m pip install zova==1.3.0
+python -m pip install zova==1.4.0
 ```
 
   </TabItem>
   <TabItem value="go" label="Go">
 
 ```sh
-go get github.com/ata-sesli/zova/bindings/go@v1.3.0
+go get github.com/ata-sesli/zova/bindings/go@v1.4.0
 ```
 
   </TabItem>
@@ -94,7 +94,7 @@ Or pin the version explicitly:
 
 ```toml
 [dependencies]
-zova = "=1.3.0"
+zova = "=1.4.0"
 ```
 
 The safe crate builds the bundled generated-C native layer. Consumers need Rust 1.79 or newer and a C compiler, but not Zig.
@@ -134,7 +134,7 @@ Use context managers so native handles close deterministically. Continue with th
 
 ## Go
 
-The Go package calls Zova through cgo. Download the v1.3.0 C ABI archive matching the target operating system and architecture, then point the build at its directories:
+The Go package calls Zova through cgo. Download the v1.4.0 C ABI archive matching the target operating system and architecture, then point the build at its directories:
 
 <Tabs groupId="operating-systems" defaultValue="macos-linux">
   <TabItem value="macos-linux" label="macOS / Linux">
@@ -161,7 +161,7 @@ Keep the Go module, header, and library on the same Zova version. See the [Go bi
 
 ## CLI and C ABI archives
 
-Download the target archive from the [v1.3.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.3.0). CLI and C ABI packages are separate artifacts.
+Download the target archive from the [v1.4.0 GitHub release](https://github.com/ata-sesli/zova/releases/tag/v1.4.0). CLI and C ABI packages are separate artifacts.
 
 After extracting the CLI, verify it:
 
@@ -190,7 +190,7 @@ Before integrating important data:
 1. Create a disposable database.
 2. Write and read one application row.
 3. Run `zova check --deep` with the matching CLI when available.
-4. Confirm the artifact reports v1.3.0.
+4. Confirm the artifact reports v1.4.0.
 5. Record the package and native artifact versions in the application build.
 
 Then follow [Build your first database](./first-database.md).

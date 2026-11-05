@@ -24,7 +24,7 @@ Avoid holding application locks across Zova calls unless lock ordering is define
 
 ## Scalar SQL callbacks
 
-The v1.3.0 C ABI can register scalar SQL functions on Zova-owned connections. Callback arguments are borrowed only for the call, and Zova copies result bytes according to the result contract.
+The v1.4.0 C ABI can register scalar SQL functions on Zova-owned connections. Callback arguments are borrowed only for the call, and Zova copies result bytes according to the result contract.
 
 A callback must not re-enter the same `zova_database` handle. Re-entry can violate serialization and SQLite callback assumptions. If a callback needs external state, provide it through the documented user-data lifetime rather than global mutable state.
 
@@ -33,6 +33,18 @@ A callback must not re-enter the same `zova_database` handle. Re-entry can viola
 C ABI artifacts can verify, trust, supply, and load external `.zovaext` bundles with `zova_database_create_with_extensions` and `zova_database_open_with_extensions`. Since 1.2.0, generated-C builds include the same loader as native Zig builds on Linux, macOS, and Windows.
 
 Since 1.3.0, a host that links plugin code into its own process can pass `zova_plugin_descriptor_v1` pointers to `zova_database_create_with_plugins`, `zova_database_open_with_plugins`, and `zova_database_open_for_extension_upgrade_with_plugins`, optionally together with trusted bundle paths. Linked descriptors need no bundle and no trust record. `zova_database_migrate_with_extensions` accepts the same bundles and descriptors for format migration. See the [Extension reference](../reference/extension-api.md#c-abi-host-surface).
+
+Since 1.4.0, `zova_database_migrate_with_progress` carries the same extension fields as `zova_database_migrate_with_extensions`.
+
+## Maintenance, progress, and seekable reads
+
+Since 1.4.0, the C ABI adds:
+
+- `zova_database_reclaim`, which releases free pages in place from members in incremental auto-vacuum mode;
+- `zova_database_backup_with_progress`, `zova_database_compact_with_progress`, and `zova_database_migrate_with_progress`, whose request structs carry a `zova_progress_fn` callback and its `user_data`; and
+- `zova_object_seekable_reader_create`, `zova_object_seekable_reader_read`, `zova_object_seekable_reader_seek`, and `zova_object_seekable_reader_destroy`.
+
+A non-zero return from the progress callback cancels the operation, which fails with the new status `ZOVA_INTERRUPTED` (18) and publishes nothing. A null callback behaves like the existing functions, which are unchanged. The C layer forwards the first event of each phase and member, whole-percent changes, and the event that completes the group. Code that switches over every `zova_status` value should handle `ZOVA_INTERRUPTED`.
 
 The release header is the authoritative symbol and struct contract. Do not copy declarations from examples into a separate local header.
 
