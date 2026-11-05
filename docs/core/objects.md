@@ -2,6 +2,10 @@
 
 Objects store immutable byte sequences by content identity. They are designed for files, payloads, serialized artifacts, and other bytes that should be verified and addressed independently of a filename or database row.
 
+:::tip[Learn by doing]
+[Tutorial part 1](../get-started/first-database.md) stores documents as objects, and [part 5](../tutorial/maintain.md) deletes a large one and reclaims its space. This page explains the rules behind it; its examples use Rust, and the API table in each binding chapter maps the calls to your language.
+:::
+
 ```text
 ObjectId = SHA-256(complete object bytes)
 ```
@@ -77,13 +81,13 @@ writer.write(b"second part\n")?;
 let object_id = writer.finish()?;
 ```
 
-`finish` completes the manifest and returns the identity of the full byte sequence. Since 1.4.0, the writer hashes each chunk once, inserts chunks in batches, and commits every 64 MiB rather than once per `write` call. In bindings with scoped writers, leaving without finishing cancels the writer and cleans up chunks that are not referenced elsewhere.
+`finish` completes the manifest and returns the identity of the full byte sequence. The writer hashes each chunk once, inserts chunks in batches, and commits every 64 MiB rather than once per `write` call. In bindings with scoped writers, leaving without finishing cancels the writer and cleans up chunks that are not referenced elsewhere.
 
 Transfer progress, expected filenames, retry state, and ownership still belong in your SQL tables. The object writer is a storage primitive, not an upload protocol.
 
 ## Objects and transactions
 
-Since 1.2.0, synchronous object writes, deletes, chunk writes, and assembly are operation-atomic and join a caller-owned transaction. With no active transaction, each operation runs in its own immediate transaction; inside one, it takes an internal savepoint. A failed operation undoes only its own chunks, manifests, and metadata. Earlier work in the caller's transaction survives, and Zova never commits or rolls back that transaction on the caller's behalf.
+Synchronous object writes, deletes, chunk writes, and assembly are operation-atomic and join a caller-owned transaction. With no active transaction, each operation runs in its own immediate transaction; inside one, it takes an internal savepoint. A failed operation undoes only its own chunks, manifests, and metadata. Earlier work in the caller's transaction survives, and Zova never commits or rolls back that transaction on the caller's behalf.
 
 This lets an object and the SQL row that references it commit together. Open a transaction with your binding's transaction helper, put the object, insert the row that stores its identity, and commit. A rollback of that transaction removes both the row and the object.
 
@@ -95,7 +99,7 @@ Range reads avoid loading a complete object when an application needs a header, 
 
 ### Seek through a large object
 
-Since 1.4.0, a seekable reader serves many reads from one object, such as HTTP range requests. It loads one chunk at a time, checks that chunk's SHA-256 once, and serves later reads inside the chunk from memory. It holds no read transaction between calls.
+A seekable reader serves many reads from one object, such as HTTP range requests; [Serve objects with range requests](../guides/serve-object-ranges.md) shows one in an HTTP handler. It loads one chunk at a time, checks that chunk's SHA-256 once, and serves later reads inside the chunk from memory. It holds no read transaction between calls.
 
 ```rust
 use std::io::{Read, Seek, SeekFrom};
@@ -143,7 +147,7 @@ There is no in-place update of an object. Changing one byte creates a different 
 
 ## Deletion and space reclamation
 
-Deleting an object removes its manifest and removes chunks no longer referenced by another object. It does **not** scan application tables for `object_id` columns or remove those rows. Since 1.4.0, format 13 indexes chunk references, so a delete no longer scans every manifest row.
+Deleting an object removes its manifest and removes chunks no longer referenced by another object. It does **not** scan application tables for `object_id` columns or remove those rows. Format 13 indexes chunk references, so a delete does not scan every manifest row.
 
 Deleting SQLite rows frees pages for reuse but does not shrink the file by itself. Files created by Zova 1.4.0 or later use incremental auto-vacuum, so free pages can be returned to the filesystem in place:
 

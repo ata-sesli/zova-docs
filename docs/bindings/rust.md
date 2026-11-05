@@ -22,6 +22,25 @@ db.exec(
 
 Use `Database::create` for a new destination and `Database::open` for an existing Zova file. Open options support read-only handles. Zova does not install a nonzero SQLite busy timeout unless the application requests one.
 
+## API at a glance
+
+The [tutorial](../get-started/first-database.md) uses most of these calls in complete programs. Methods are on `zova::Database` unless a free function or type is named; `SharedDatabase` provides the same storage methods.
+
+| Task | Calls | Tutorial |
+|---|---|---|
+| Create or open a database | `Database::create(path)`, `Database::open(path)`, `Database::open_with_options(path, options)`, `Database::create_memory()` | [part 1](../get-started/first-database.md) |
+| Run SQL | `exec(sql)`; `prepare(sql)` returns a `Statement` that borrows the database until dropped | [part 1](../get-started/first-database.md) |
+| Bind and read values | `bind_text`, `bind_i64`, `bind_f64`, `bind_blob`, `bind_null`; `step()` returns `Step::Row` or `Step::Done`; `column_text`, `column_i64`, `column_f64`, `column_blob` return `Option` values | [part 1](../get-started/first-database.md) |
+| Group writes | `begin_immediate`, `commit`, `rollback`; `savepoint`, `rollback_to_savepoint`, `release_savepoint`, `with_savepoint`; `SharedDatabase::transaction` and `transaction_immediate` | [part 2](../tutorial/search.md) |
+| Store and read bytes | `put_object(bytes)`, `get_object(id)`, `read_object_range`, `object_size(id)`, `delete_object(id)`; `ObjectId::try_from(&[u8])` | [part 1](../get-started/first-database.md) |
+| Stream large objects | `object_writer()`; `object_seekable_reader(id)`, which implements `Read + Seek` | [guide](../guides/serve-object-ranges.md) |
+| Key-value state | `kv_put(namespace, key, value)`, `kv_get(namespace, key)`, `kv_delete`, `kv_put_many`, `kv_get_many`, `kv_count` | [part 4](../tutorial/state.md) |
+| Vectors | `create_vector_collection(name, VectorCollectionOptions { .. })`, `put_vectors(name, &[VectorInput { .. }])`, `search_vectors(name, VectorValues::F32(&query), limit)`, `search_vectors_by_id(name, id, limit)` | [part 2](../tutorial/search.md) |
+| Graphs | `create_graph(name)`, `put_graph_node(GraphNodeInput { .. })`, `put_graph_edges(&[GraphEdgeInput { .. }])`, `graph_neighbors(GraphNeighborsOptions { .. })`, `graph_walk(GraphWalkOptions { .. })` | [part 3](../tutorial/relate.md) |
+| App events | `listen(channel)` returns a `Subscription` with `try_receive()`; `notify(channel, payload)` | [part 4](../tutorial/state.md) |
+| Copies and space | `backup_to`, `backup_to_with_progress`, `compact_to`, `compact_to_with_progress`, `reclaim_space(ReclaimOptions::default())`; free function `zova::restore_backup` | [part 5](../tutorial/maintain.md) |
+| Formats | free functions `zova::probe_format(path)`, `migrate_database`, `migrate_database_with_progress`, `migrate_database_with_extensions`; `Database::convert_sqlite_to_zova` | [guide](../guides/migrate-format.md) |
+
 ## Choose the ownership model
 
 `Database` suits single-owner code and exposes mutating operations through a mutable reference. `SharedDatabase` is a cloneable `Send + Sync` handle whose calls are serialized by an internal mutex.
@@ -48,7 +67,7 @@ let mut query = db.prepare(
 )?;
 query.bind_text(1, "theme")?;
 assert_eq!(query.step()?, Step::Row);
-assert_eq!(query.column_text(0)?, Some("sage"));
+assert_eq!(query.column_text(0)?.as_deref(), Some("sage"));
 ```
 
 Dropping statements and result owners releases their native resources. Do not try to use a database mutably while a statement still holds the corresponding borrow; finish or drop the statement first.
@@ -57,7 +76,7 @@ Dropping statements and result owners releases their native resources. Do not tr
 
 The crate exposes transactions, immediate transactions, named savepoints, and closure-based savepoint helpers. On a shared handle, scoped guards keep the mutex for the complete unit so another clone cannot interleave calls in the middle.
 
-Since 1.2.0, `transaction`, `transaction_immediate`, and `with_savepoint` roll their scope back when the closure returns an error and also when it panics. The rollback happens before the connection lock is released, then the panic propagates unchanged; use `std::panic::catch_unwind` to recover from it. This does not apply to `panic = "abort"` profiles or process termination. If a rollback fails, that `SharedDatabase` handle is retired and its later calls fail; open a new one.
+`transaction`, `transaction_immediate`, and `with_savepoint` roll their scope back when the closure returns an error and also when it panics. The rollback happens before the connection lock is released, then the panic propagates unchanged; use `std::panic::catch_unwind` to recover from it. This does not apply to `panic = "abort"` profiles or process termination. If a rollback fails, that `SharedDatabase` handle is retired and its later calls fail; open a new one.
 
 Use the transaction APIs rather than issuing raw transaction SQL when app events or Zova's transaction-aware behavior must track the scope.
 
@@ -73,7 +92,7 @@ The safe crate covers:
 - same-process app events; and
 - backup, compact, restore, and bundled extension lifecycle.
 
-Since 1.4.0, the crate also covers:
+It also provides:
 
 - `reclaim_space(ReclaimOptions::default())`, returning one `ReclaimedMember` per member file with `pages_released` and `free_pages_left`;
 - `object_seekable_reader(id)`, a `Read + Seek` reader for range serving, plus `object_seekable_reader_owned` and `SharedDatabase::object_seekable_reader`;
@@ -87,13 +106,13 @@ let members = db.reclaim_space(ReclaimOptions::default())?;
 println!("{} pages released", members[0].pages_released);
 ```
 
-After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only in v1.4.0.
+After opening a main database with bound stores, the same object, vector, and graph methods route transparently. Creating, binding, splitting, and unbinding stores remains CLI/native Zig-only.
 
 ## Native packaging and extensions
 
 The crate selects a target-specific generated-C companion crate, so supported consumers need Rust 1.79+ and a C compiler but not Zig or a build-time source download. Bundled extensions such as `trgm` are available through safe lifecycle methods.
 
-Since 1.2.0, the safe crate selects trusted `.zovaext` bundles at create/open:
+The safe crate selects trusted `.zovaext` bundles at create/open:
 
 ```rust
 let extensions = zova::ExtensionOptions {
@@ -111,4 +130,4 @@ Scalar callback registration, explicit extension-data upgrades, linked plugin de
 
 Raw `zova-sys` also declares the opaque graph key, edge payload, topology scan, prepared build, and fresh-build session APIs. The safe `zova` crate deliberately does not wrap those low-level publication surfaces.
 
-See [Build your first database](../get-started/first-database.md) for an end-to-end Rust example and the individual core chapters for storage semantics.
+The [tutorial](../get-started/first-database.md) builds a complete application in Rust and the other bindings, and the Concepts chapters explain storage semantics.

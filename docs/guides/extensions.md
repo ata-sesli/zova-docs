@@ -32,9 +32,9 @@ The process can provide extensions in four ways:
 - bundled extensions shipped with Zova, such as `trgm`;
 - app-registered native Zig extensions;
 - explicitly supplied and trusted local `.zovaext` bundles; or
-- since 1.3.0, plugin descriptors linked into the host process, through the C ABI and Zig.
+- plugin descriptors linked into the host process, through the C ABI and Zig.
 
-Since 1.2.0, the Rust, Python, Go, and JavaScript bindings select trusted bundles at create/open, as shown in [Load bundles from an application](#load-bundles-from-an-application). They do not provide extension-authoring APIs. Native Zig, the CLI, and the C ABI expose the widest host surface.
+The Rust, Python, Go, and JavaScript bindings select trusted bundles at create/open, as shown in [Load bundles from an application](#load-bundles-from-an-application). They do not provide extension-authoring APIs. Native Zig, the CLI, and the C ABI expose the widest host surface.
 
 ## Trust a local bundle
 
@@ -162,7 +162,7 @@ The host validates the declared numeric ABI minimum; still test trusted native c
 
 ## Author against the common C plugin ABI
 
-Since 1.2.0, the supported authoring contract is the common C plugin ABI v1 in `include/zova_plugin.h`. Plugins written in C, C++, Rust, Zig, or another language that preserves C layouts and calling conventions export `zova_plugin_entry_v1` and return a descriptor. The host offers negotiated services for read-only SQL, diagnostics, bounded graph and vector reads, plugin-owned storage, SQL operation registration, and vector change history. See [Host services](../reference/extension-api.md#host-services).
+The supported authoring contract is the common C plugin ABI v1 in `include/zova_plugin.h`. Plugins written in C, C++, Rust, Zig, or another language that preserves C layouts and calling conventions export `zova_plugin_entry_v1` and return a descriptor. The host offers negotiated services for read-only SQL, diagnostics, bounded graph and vector reads, plugin-owned storage, SQL operation registration, and vector change history. See [Host services](../reference/extension-api.md#host-services).
 
 Operations a plugin registers become ordinary SQL functions and table-valued functions named `zova_<extension>_<operation>`, so applications call them through prepared statements in any binding.
 
@@ -192,11 +192,11 @@ zova extension verify --smoke ./sample_ext.zovaext
 
 The smoke verification loads the bundle, creates a temporary database, installs the extension, runs its check hook, and reopens the database with the same bundle. It is a packaging and lifecycle check, not a substitute for extension-specific tests.
 
-The bundle producer and legacy Zig descriptors remain experimental, not a second stable ABI. There is no high-level JavaScript, TypeScript, Python, or Go authoring SDK in v1.4.0.
+The bundle producer and legacy Zig descriptors remain experimental, not a second stable ABI. There is no high-level JavaScript, TypeScript, Python, or Go authoring SDK.
 
 ## Runtime artifact differences
 
-Since 1.2.0, dynamic bundle loading works in native Zig, the CLI, C ABI archives, and generated-C language packages on Linux, macOS, and Windows. Packages from 1.1.0 and earlier do not gain this retroactively.
+Dynamic bundle loading works in native Zig, the CLI, C ABI archives, and generated-C language packages on Linux, macOS, and Windows. Packages from 1.1.0 and earlier do not gain this retroactively.
 
 On Windows, Zova loads the bundle library with dependency search restricted to the bundle directory: sibling DLL dependencies resolve, the process current directory is never searched, and a dependency replaced after trust is rejected before any of its code runs.
 

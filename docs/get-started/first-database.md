@@ -1,17 +1,33 @@
-# Build your first database
+---
+sidebar_label: 1. Store documents
+---
 
-This walkthrough builds the first slice of a local document library. It stores searchable metadata in SQL and immutable file bytes as a Zova object, then reads them back together.
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-The example uses Rust because it makes ownership and error handling explicit. The same storage model is available from JavaScript, TypeScript, Python, Go, C, and Zig; their binding chapters show the corresponding syntax.
+# Tutorial part 1: Store documents
 
-## What you will build
+This tutorial builds a small local document library in five parts. Each part is one short program that opens the same `library.zova` file and adds one capability:
 
-At the end, `library.zova` contains:
+| Part | Program | What you add |
+|---|---|---|
+| **1. Store documents** | `store` | SQL rows for metadata and content-addressed objects for file bytes |
+| [2. Search by meaning](../tutorial/search.md) | `search` | one embedding per document and nearest-neighbor search, in code and in SQL |
+| [3. Relate documents](../tutorial/relate.md) | `relate` | a graph of topics and citations, traversed in code and joined in SQL |
+| [4. Keep app state and react to changes](../tutorial/state.md) | `state` | a reading position in key-value storage and change events that follow transactions |
+| [5. Back up and reclaim space](../tutorial/maintain.md) | `maintain` | a verified backup and page reclamation after deleting a large object |
 
-- a `documents` table owned by the application;
-- one document row with a title and media type;
-- one content-addressed object containing the document bytes; and
-- an application-owned reference from the row to that object.
+Every step is shown in JavaScript, Python, Rust, and Go. Pick a language tab once and the choice follows you across pages. The programs on these pages were run against the Zova 1.4.0 packages, and each **Expected output** block is what they printed. The prose names calls in snake_case, as Python and Rust spell them; JavaScript and Go use the same names in camelCase and PascalCase, such as `putObject` and `PutObject` for `put_object`.
+
+Run the parts in order. Each program assumes the previous ones already ran against `library.zova`. To start over, delete `library.zova` and run part 1 again.
+
+## What you will build in this part
+
+At the end of this part, `library.zova` contains:
+
+- a `documents` table owned by your application;
+- three document rows with a title and media type; and
+- three content-addressed objects holding the document bytes, each referenced from its row.
 
 ```mermaid
 flowchart LR
@@ -20,38 +36,136 @@ flowchart LR
     Row -- "object_id" --> Object
 ```
 
-This is the basic Zova pattern: SQL describes the application entity; specialized storage holds the data shape it is designed for.
+This is the basic Zova pattern: SQL describes the application entity, and specialized storage holds the data shape it is designed for.
 
-## Create the database
+## Set up a project
 
-Create a Rust project and add Zova:
+Create a project directory and add the Zova 1.4.0 package. See [Installation](./installation.md) for platform requirements.
+
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript">
 
 ```sh
-cargo new zova-library
-cd zova-library
-cargo add zova@1.4.0
+mkdir zova-library && cd zova-library
+npm init -y
+npm install zova-js@1.4.0
 ```
 
-Replace `src/main.rs` with the imports and database creation below:
+Each part is an ES module file such as `store.mjs`, run with Node.js 22 or newer.
 
-```rust
-use std::convert::TryFrom;
-use zova::{Database, ObjectId, Step};
+  </TabItem>
+  <TabItem value="python" label="Python">
 
-fn main() -> Result<(), zova::Error> {
-    let mut db = Database::create("library.zova")?;
+```sh
+uv init --bare --python 3.13 zova-library && cd zova-library
+uv add zova==1.4.0
+```
 
-    // The rest of the walkthrough goes here.
+Each part is a script such as `store.py`. Zova's wheels require Python 3.13 or newer.
 
-    Ok(())
+  </TabItem>
+  <TabItem value="rust" label="Rust">
+
+```sh
+cargo new zova-library && cd zova-library
+cargo add zova@1.4.0
+mkdir src/bin
+```
+
+Each part is a separate binary such as `src/bin/store.rs`.
+
+  </TabItem>
+  <TabItem value="go" label="Go">
+
+```sh
+mkdir zova-library && cd zova-library
+go mod init example.com/library
+go get github.com/ata-sesli/zova/bindings/go@v1.4.0
+export CGO_CFLAGS="-I/absolute/path/to/zova-c-abi/include"
+export CGO_LDFLAGS="-L/absolute/path/to/zova-c-abi/lib -lzova_c"
+```
+
+The Go package links the C ABI archive from the same release; [Installation](./installation.md#go) covers the download and Windows settings. Each part is a package directory such as `store/main.go`.
+
+  </TabItem>
+</Tabs>
+
+## Step 1: Create the database
+
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript">
+
+```js
+const db = Database.create("library.zova");
+try {
+  // ...
+} finally {
+  db.close();
 }
 ```
 
-`Database::create` expects a new `.zova` destination. It initializes SQLite, Zova's format metadata, and the private schemas used by specialized storage. A renamed `.sqlite` file is not equivalent; use the [SQLite migration workflow](../guides/sqlite-migration.md) for an existing database.
+  </TabItem>
+  <TabItem value="python" label="Python">
 
-## Create the application schema
+```python
+with zova.Database.create("library.zova") as db:
+    ...  # the rest of this part runs inside this block
+```
 
-Add a table for document metadata:
+  </TabItem>
+  <TabItem value="rust" label="Rust">
+
+```rust
+let mut db = Database::create("library.zova")?;
+```
+
+  </TabItem>
+  <TabItem value="go" label="Go">
+
+```go
+db, err := zova.Create("library.zova")
+must(err)
+defer db.Close()
+```
+
+  </TabItem>
+</Tabs>
+
+`create` makes a new `.zova` file. It initializes SQLite, Zova's format metadata, and the private schemas used by specialized storage. It refuses a path that already exists, so running this program twice fails with `ZOVA_DESTINATION_EXISTS`. Use `open` for an existing Zova file and the [SQLite migration workflow](../guides/sqlite-migration.md) for an existing SQLite database; a renamed `.sqlite` file is not equivalent.
+
+The Go examples use a small `must` helper that stops the program on any error; the complete program at the end of each page defines it.
+
+## Step 2: Create the application schema
+
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript">
+
+```js
+db.exec(`create table documents(
+  id integer primary key,
+  title text not null,
+  media_type text not null,
+  object_id blob not null,
+  created_at text not null default current_timestamp
+)`);
+```
+
+  </TabItem>
+  <TabItem value="python" label="Python">
+
+```python
+db.exec(
+    "create table documents("
+    "id integer primary key, "
+    "title text not null, "
+    "media_type text not null, "
+    "object_id blob not null, "
+    "created_at text not null default current_timestamp)"
+)
+```
+
+  </TabItem>
+  <TabItem value="rust" label="Rust">
 
 ```rust
 db.exec(
@@ -65,99 +179,492 @@ db.exec(
 )?;
 ```
 
-The table belongs entirely to the application. Zova will not reinterpret the title, add indexes, or enforce a relationship between `object_id` and its private object tables. That separation lets ordinary SQLite tools understand your application schema without requiring them to understand every Zova feature.
+  </TabItem>
+  <TabItem value="go" label="Go">
 
-Use SQL constraints for application rules. If titles must be unique or a document belongs to a user, model those requirements here exactly as you would in SQLite.
-
-## Store the file bytes
-
-Objects are immutable byte sequences identified by the SHA-256 hash of their complete contents:
-
-```rust
-let bytes = b"Zova keeps metadata relational and bytes content-addressed.";
-let object_id = db.put_object(bytes)?;
+```go
+must(db.Exec(`create table documents(
+	id integer primary key,
+	title text not null,
+	media_type text not null,
+	object_id blob not null,
+	created_at text not null default current_timestamp
+)`))
 ```
 
-Putting identical bytes again returns the same object ID. Internally, Zova chunks object data and deduplicates chunks within the active object store, but callers work with the identity of the complete object.
+  </TabItem>
+</Tabs>
 
-The ID says what the bytes are, not what they mean. Filename, media type, ownership, and lifecycle remain in the SQL row.
+The table belongs entirely to your application. Zova does not reinterpret the title, add indexes, or enforce a relationship between `object_id` and its private object tables. Ordinary SQLite tools can read your schema without understanding Zova features.
 
-## Connect metadata to bytes
+Use SQL constraints for application rules. If titles must be unique or a document belongs to a user, model that here exactly as you would in SQLite.
 
-Insert the metadata and bind the object ID as a blob:
+## Step 3: Store bytes and link them to rows
 
-```rust
-let mut insert = db.prepare(
-    "insert into documents(title, media_type, object_id) \
-     values (?1, ?2, ?3)",
-)?;
-insert.bind_text(1, "field-notes.txt")?;
-insert.bind_text(2, "text/plain")?;
-insert.bind_blob(3, object_id.as_ref())?;
-assert_eq!(insert.step()?, Step::Done);
-drop(insert);
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript">
 
-let document_id = db.last_insert_rowid()?;
-println!("stored document {document_id}");
+```js
+for (const [title, mediaType, body] of documents) {
+  const objectId = db.putObject(encoder.encode(body));
+  const insert = db.prepare(
+    "insert into documents(title, media_type, object_id) values (?1, ?2, ?3)",
+  );
+  insert.bindText(1, title);
+  insert.bindText(2, mediaType);
+  insert.bindBlob(3, objectId);
+  if (insert.step() !== Step.Done) throw new Error("insert did not finish");
+  insert.close();
+  console.log(`stored document ${db.lastInsertRowid()}: ${title}`);
+}
 ```
 
-Prepared statements keep values separate from SQL text and are the normal interface for user-controlled input. `Step::Done` means the statement completed without producing a row. `last_insert_rowid` returns the SQLite row ID generated on this connection.
+  </TabItem>
+  <TabItem value="python" label="Python">
 
-:::note[Explicit lifecycle]
-Deleting the SQL row does not automatically delete the object, and deleting the object does not rewrite the SQL row. Decide whether objects can be shared, retained, or garbage-collected as part of your application model.
+```python
+for title, media_type, body in DOCUMENTS:
+    object_id = db.put_object(body)
+    with db.prepare(
+        "insert into documents(title, media_type, object_id) values (?1, ?2, ?3)"
+    ) as insert:
+        insert.bind_text(1, title)
+        insert.bind_text(2, media_type)
+        insert.bind_blob(3, bytes(object_id))
+        assert insert.step() == zova.Step.DONE
+    print(f"stored document {db.last_insert_rowid()}: {title}")
+```
+
+  </TabItem>
+  <TabItem value="rust" label="Rust">
+
+```rust
+for (title, media_type, body) in DOCUMENTS {
+    let object_id = db.put_object(body)?;
+    let mut insert = db.prepare(
+        "insert into documents(title, media_type, object_id) values (?1, ?2, ?3)",
+    )?;
+    insert.bind_text(1, title)?;
+    insert.bind_text(2, media_type)?;
+    insert.bind_blob(3, object_id.as_ref())?;
+    assert_eq!(insert.step()?, Step::Done);
+    drop(insert);
+    println!("stored document {}: {title}", db.last_insert_rowid()?);
+}
+```
+
+  </TabItem>
+  <TabItem value="go" label="Go">
+
+```go
+for _, doc := range documents {
+	objectID, err := db.PutObject([]byte(doc.body))
+	must(err)
+	insert, err := db.Prepare("insert into documents(title, media_type, object_id) values (?1, ?2, ?3)")
+	must(err)
+	must(insert.BindText(1, doc.title))
+	must(insert.BindText(2, doc.mediaType))
+	must(insert.BindBlob(3, objectID[:]))
+	if step, err := insert.Step(); err != nil || step != zova.StepDone {
+		log.Fatalf("insert did not finish: %v", err)
+	}
+	must(insert.Close())
+	rowID, err := db.LastInsertRowID()
+	must(err)
+	fmt.Printf("stored document %d: %s\n", rowID, doc.title)
+}
+```
+
+  </TabItem>
+</Tabs>
+
+`put_object` stores immutable bytes and returns their **object ID**: the SHA-256 hash of the complete contents. Putting identical bytes again returns the same ID. Internally, Zova splits object data into chunks and deduplicates them, but callers only work with the identity of the complete object.
+
+The ID says what the bytes are, not what they mean. The filename, media type, and lifecycle stay in the SQL row, which stores the ID as a 32-byte blob.
+
+Prepared statements keep values separate from SQL text and are the normal interface for user input. A step result of `Done` means the statement finished without producing a row. `last_insert_rowid` returns the row ID SQLite generated on this connection.
+
+:::note[Lifecycle is yours]
+Deleting the SQL row does not delete the object, and deleting the object does not rewrite the row. Decide whether objects can be shared, retained, or garbage-collected as part of your application model. Part 5 deletes an object and reclaims its space.
 :::
 
-## Read the document back
+## Step 4: Read documents back
 
-Query the application row first, reconstruct the typed object ID, and then ask Zova for the bytes:
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript">
+
+```js
+const query = db.prepare("select title, object_id from documents order by id");
+while (query.step() === Step.Row) {
+  const title = query.columnText(0);
+  const storedId = query.columnBlob(1);
+  const body = db.getObject(storedId);
+  console.log(`${title}: ${body.byteLength} bytes, object ${objectIdToHex(storedId).slice(0, 12)}…`);
+}
+query.close();
+```
+
+  </TabItem>
+  <TabItem value="python" label="Python">
+
+```python
+with db.prepare("select title, object_id from documents order by id") as query:
+    while query.step() == zova.Step.ROW:
+        title = query.column_text(0)
+        stored_id = zova.ObjectId(query.column_blob(1))
+        body = db.get_object(stored_id)
+        print(f"{title}: {len(body)} bytes, object {stored_id.hex()[:12]}…")
+```
+
+  </TabItem>
+  <TabItem value="rust" label="Rust">
 
 ```rust
-let mut query = db.prepare(
-    "select title, media_type, object_id \
-     from documents where id = ?1",
-)?;
-query.bind_i64(1, document_id)?;
-
-assert_eq!(query.step()?, Step::Row);
-let title = query.column_text(0)?.unwrap().to_owned();
-let media_type = query.column_text(1)?.unwrap().to_owned();
-let stored_id = ObjectId::try_from(
-    query.column_blob(2)?.unwrap().as_slice(),
-)?;
+// A statement borrows the database, so collect rows before reading objects.
+let mut rows = Vec::new();
+let mut query = db.prepare("select title, object_id from documents order by id")?;
+while query.step()? == Step::Row {
+    let title = query.column_text(0)?.unwrap();
+    let object_id = ObjectId::try_from(query.column_blob(1)?.unwrap().as_slice())?;
+    rows.push((title, object_id));
+}
 drop(query);
 
-let stored_bytes = db.get_object(stored_id)?;
-assert_eq!(stored_bytes, bytes);
-println!("{title} ({media_type}): {} bytes", stored_bytes.len());
+for (title, object_id) in rows {
+    let body = db.get_object(object_id)?;
+    let hex: String = object_id.as_ref().iter().take(6).map(|b| format!("{b:02x}")).collect();
+    println!("{title}: {} bytes, object {hex}…", body.len());
+}
 ```
+
+  </TabItem>
+  <TabItem value="go" label="Go">
+
+```go
+query, err := db.Prepare("select title, object_id from documents order by id")
+must(err)
+defer query.Close()
+for {
+	step, err := query.Step()
+	must(err)
+	if step != zova.StepRow {
+		break
+	}
+	title, _, err := query.ColumnText(0)
+	must(err)
+	blob, _, err := query.ColumnBlob(1)
+	must(err)
+	var objectID zova.ObjectID
+	copy(objectID[:], blob)
+	body, err := db.GetObject(objectID)
+	must(err)
+	fmt.Printf("%s: %d bytes, object %s…\n", title, len(body), hex.EncodeToString(objectID[:6]))
+}
+```
+
+  </TabItem>
+</Tabs>
 
 The query returns metadata and a reference. The object API resolves that reference and verifies the content-addressed data before returning it.
 
-For a large object, use `read_object_range` when only part of the content is needed, or `ObjectWriter` when input arrives incrementally. The complete object does not need to be assembled in application memory before writing.
+In Rust, a prepared statement borrows the database, so the program collects rows first and reads objects after dropping the statement.
 
-## Inspect the result
+For a large object, read only the part you need with a range read or a seekable reader, and write incrementally with an object writer. The [Objects](../core/objects.md) chapter covers both, and [Serve objects with range requests](../guides/serve-object-ranges.md) shows them in an HTTP handler.
 
-Run the program, then inspect the database with the CLI:
+## Run it
+
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript">
 
 ```sh
-cargo run
+node store.mjs
+```
+
+  </TabItem>
+  <TabItem value="python" label="Python">
+
+```sh
+uv run store.py
+```
+
+  </TabItem>
+  <TabItem value="rust" label="Rust">
+
+```sh
+cargo run --bin store
+```
+
+  </TabItem>
+  <TabItem value="go" label="Go">
+
+```sh
+go run ./store
+```
+
+  </TabItem>
+</Tabs>
+
+Expected output:
+
+```text
+stored document 1: field-notes.txt
+stored document 2: storage-design.md
+stored document 3: travel-log.txt
+field-notes.txt: 37 bytes, object 3d873715b1cd…
+storage-design.md: 43 bytes, object f37d336b4054…
+travel-log.txt: 39 bytes, object 06de792714d2…
+```
+
+The object IDs are hashes of the bytes, so they are the same on every machine and in every language.
+
+## The complete program
+
+<Tabs groupId="programming-languages" defaultValue="javascript">
+  <TabItem value="javascript" label="JavaScript">
+
+```js title="store.mjs"
+import { Database, Step, objectIdToHex } from "zova-js";
+
+const documents = [
+  ["field-notes.txt", "text/plain", "Notes from the storage design review."],
+  ["storage-design.md", "text/markdown", "# Storage design\nMetadata stays relational."],
+  ["travel-log.txt", "text/plain", "Day 1: trains, coffee, and a long walk."],
+];
+const encoder = new TextEncoder();
+
+const db = Database.create("library.zova");
+try {
+  db.exec(`create table documents(
+    id integer primary key,
+    title text not null,
+    media_type text not null,
+    object_id blob not null,
+    created_at text not null default current_timestamp
+  )`);
+
+  for (const [title, mediaType, body] of documents) {
+    const objectId = db.putObject(encoder.encode(body));
+    const insert = db.prepare(
+      "insert into documents(title, media_type, object_id) values (?1, ?2, ?3)",
+    );
+    insert.bindText(1, title);
+    insert.bindText(2, mediaType);
+    insert.bindBlob(3, objectId);
+    if (insert.step() !== Step.Done) throw new Error("insert did not finish");
+    insert.close();
+    console.log(`stored document ${db.lastInsertRowid()}: ${title}`);
+  }
+
+  const query = db.prepare("select title, object_id from documents order by id");
+  while (query.step() === Step.Row) {
+    const title = query.columnText(0);
+    const storedId = query.columnBlob(1);
+    const body = db.getObject(storedId);
+    console.log(`${title}: ${body.byteLength} bytes, object ${objectIdToHex(storedId).slice(0, 12)}…`);
+  }
+  query.close();
+} finally {
+  db.close();
+}
+```
+
+  </TabItem>
+  <TabItem value="python" label="Python">
+
+```python title="store.py"
+import zova
+
+DOCUMENTS = [
+    ("field-notes.txt", "text/plain", b"Notes from the storage design review."),
+    ("storage-design.md", "text/markdown", b"# Storage design\nMetadata stays relational."),
+    ("travel-log.txt", "text/plain", b"Day 1: trains, coffee, and a long walk."),
+]
+
+with zova.Database.create("library.zova") as db:
+    db.exec(
+        "create table documents("
+        "id integer primary key, "
+        "title text not null, "
+        "media_type text not null, "
+        "object_id blob not null, "
+        "created_at text not null default current_timestamp)"
+    )
+
+    for title, media_type, body in DOCUMENTS:
+        object_id = db.put_object(body)
+        with db.prepare(
+            "insert into documents(title, media_type, object_id) values (?1, ?2, ?3)"
+        ) as insert:
+            insert.bind_text(1, title)
+            insert.bind_text(2, media_type)
+            insert.bind_blob(3, bytes(object_id))
+            assert insert.step() == zova.Step.DONE
+        print(f"stored document {db.last_insert_rowid()}: {title}")
+
+    with db.prepare("select title, object_id from documents order by id") as query:
+        while query.step() == zova.Step.ROW:
+            title = query.column_text(0)
+            stored_id = zova.ObjectId(query.column_blob(1))
+            body = db.get_object(stored_id)
+            print(f"{title}: {len(body)} bytes, object {stored_id.hex()[:12]}…")
+```
+
+  </TabItem>
+  <TabItem value="rust" label="Rust">
+
+```rust title="src/bin/store.rs"
+use std::convert::TryFrom;
+use zova::{Database, ObjectId, Step};
+
+const DOCUMENTS: [(&str, &str, &[u8]); 3] = [
+    ("field-notes.txt", "text/plain", b"Notes from the storage design review."),
+    ("storage-design.md", "text/markdown", b"# Storage design\nMetadata stays relational."),
+    ("travel-log.txt", "text/plain", b"Day 1: trains, coffee, and a long walk."),
+];
+
+fn main() -> Result<(), zova::Error> {
+    let mut db = Database::create("library.zova")?;
+    db.exec(
+        "create table documents(\
+           id integer primary key,\
+           title text not null,\
+           media_type text not null,\
+           object_id blob not null,\
+           created_at text not null default current_timestamp\
+         )",
+    )?;
+
+    for (title, media_type, body) in DOCUMENTS {
+        let object_id = db.put_object(body)?;
+        let mut insert = db.prepare(
+            "insert into documents(title, media_type, object_id) values (?1, ?2, ?3)",
+        )?;
+        insert.bind_text(1, title)?;
+        insert.bind_text(2, media_type)?;
+        insert.bind_blob(3, object_id.as_ref())?;
+        assert_eq!(insert.step()?, Step::Done);
+        drop(insert);
+        println!("stored document {}: {title}", db.last_insert_rowid()?);
+    }
+
+    // A statement borrows the database, so collect rows before reading objects.
+    let mut rows = Vec::new();
+    let mut query = db.prepare("select title, object_id from documents order by id")?;
+    while query.step()? == Step::Row {
+        let title = query.column_text(0)?.unwrap();
+        let object_id = ObjectId::try_from(query.column_blob(1)?.unwrap().as_slice())?;
+        rows.push((title, object_id));
+    }
+    drop(query);
+
+    for (title, object_id) in rows {
+        let body = db.get_object(object_id)?;
+        let hex: String = object_id.as_ref().iter().take(6).map(|b| format!("{b:02x}")).collect();
+        println!("{title}: {} bytes, object {hex}…", body.len());
+    }
+    Ok(())
+}
+```
+
+  </TabItem>
+  <TabItem value="go" label="Go">
+
+```go title="store/main.go"
+package main
+
+import (
+	"encoding/hex"
+	"fmt"
+	"log"
+
+	zova "github.com/ata-sesli/zova/bindings/go"
+)
+
+var documents = []struct{ title, mediaType, body string }{
+	{"field-notes.txt", "text/plain", "Notes from the storage design review."},
+	{"storage-design.md", "text/markdown", "# Storage design\nMetadata stays relational."},
+	{"travel-log.txt", "text/plain", "Day 1: trains, coffee, and a long walk."},
+}
+
+func main() {
+	db, err := zova.Create("library.zova")
+	must(err)
+	defer db.Close()
+
+	must(db.Exec(`create table documents(
+		id integer primary key,
+		title text not null,
+		media_type text not null,
+		object_id blob not null,
+		created_at text not null default current_timestamp
+	)`))
+
+	for _, doc := range documents {
+		objectID, err := db.PutObject([]byte(doc.body))
+		must(err)
+		insert, err := db.Prepare("insert into documents(title, media_type, object_id) values (?1, ?2, ?3)")
+		must(err)
+		must(insert.BindText(1, doc.title))
+		must(insert.BindText(2, doc.mediaType))
+		must(insert.BindBlob(3, objectID[:]))
+		if step, err := insert.Step(); err != nil || step != zova.StepDone {
+			log.Fatalf("insert did not finish: %v", err)
+		}
+		must(insert.Close())
+		rowID, err := db.LastInsertRowID()
+		must(err)
+		fmt.Printf("stored document %d: %s\n", rowID, doc.title)
+	}
+
+	query, err := db.Prepare("select title, object_id from documents order by id")
+	must(err)
+	defer query.Close()
+	for {
+		step, err := query.Step()
+		must(err)
+		if step != zova.StepRow {
+			break
+		}
+		title, _, err := query.ColumnText(0)
+		must(err)
+		blob, _, err := query.ColumnBlob(1)
+		must(err)
+		var objectID zova.ObjectID
+		copy(objectID[:], blob)
+		body, err := db.GetObject(objectID)
+		must(err)
+		fmt.Printf("%s: %d bytes, object %s…\n", title, len(body), hex.EncodeToString(objectID[:6]))
+	}
+}
+
+func must(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+  </TabItem>
+</Tabs>
+
+## Inspect the file
+
+The CLI reports what the program wrote without dumping object bytes or application rows:
+
+```sh
 zova info library.zova
 zova tables library.zova
 zova objects library.zova
 zova check --deep library.zova
 ```
 
-The inspection commands are bounded: they report identities and metadata without dumping object bytes or arbitrary application rows. `check --deep` validates both the database structure and specialized storage.
+`zova objects` lists the three object IDs with their sizes. `zova check --deep` validates the SQLite structure and every specialized store, and ends with `status: ok`.
 
-## Extend the same model
+## What you learned
 
-The document row is now the relational anchor for other capabilities:
+- A `.zova` file is a SQLite database plus Zova-owned private tables. Your schema stays yours.
+- Objects are immutable bytes identified by their SHA-256 hash. Store the ID in your rows.
+- Metadata stays relational. Objects complement SQL rows rather than replacing them.
+- The link between a row and its object is application policy, not a foreign key Zova enforces.
 
-- Add a `vector_id` column and store an embedding in a named vector collection. Vector search returns IDs that join back to `documents`.
-- Add a `graph_node_id` column and create edges such as `belongs_to`, `derived_from`, or `mentions`.
-- Use transactions and savepoints when multiple related mutations must succeed or roll back together under the supported operation policy.
-- Keep everything in `library.zova` until there is a concrete operational reason to use an optional bound store.
-
-## What to read next
-
-Continue with [Records](../core/records.md) to understand SQL ownership and transactions, then [Objects](../core/objects.md) for streaming, range reads, deduplication, and deletion behavior. When you are ready to add retrieval, read [Vectors](../core/vectors.md) and the [vector search guide](../guides/vector-search.md).
+**Next:** [Part 2: Search by meaning](../tutorial/search.md) gives each document an embedding and ranks them by similarity.

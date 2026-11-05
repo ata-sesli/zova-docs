@@ -18,6 +18,27 @@ Prebuilt packages support Node.js 22 and 24 and Bun on:
 
 Electron, Deno, browser use of this native addon, musl Linux, and Windows arm64 are not claimed. A supported prebuilt installation does not need Zig, Rust, a C compiler, or an install-time native download. Browser applications can use the separate experimental [WebAssembly package](./wasm.md).
 
+## API at a glance
+
+The [tutorial](../get-started/first-database.md) uses most of these calls in complete programs. All methods are on `Database` unless a type is named.
+
+| Task | Calls | Tutorial |
+|---|---|---|
+| Create or open a database | `Database.create(path)`, `Database.open(path, options?)`, `Database.createMemory()`, `close()` | [part 1](../get-started/first-database.md) |
+| Run SQL | `exec(sql)`; `prepare(sql)` returns a `Statement` to `close()` | [part 1](../get-started/first-database.md) |
+| Bind and read values | `bindText`, `bindInteger` (`bigint`), `bindFloat`, `bindBlob`, `bindNull`; `step()` returns `Step.Row` or `Step.Done`; `columnText`, `columnInteger`, `columnFloat`, `columnBlob` | [part 1](../get-started/first-database.md) |
+| Group writes | `transaction(callback)`, `transactionImmediate(callback)`; `beginImmediate`, `commit`, `rollback`; `savepoint`, `rollbackToSavepoint`, `releaseSavepoint` | [part 2](../tutorial/search.md) |
+| Store and read bytes | `putObject(bytes)`, `getObject(id)`, `readObjectRange(id, offset, size)`, `objectSize(id)`, `deleteObject(id)`, `objectIdToHex(id)` | [part 1](../get-started/first-database.md) |
+| Stream large objects | `objectWriter()` with `write`, `finish`, `cancel`; `objectSeekableReader(id)` with `read`, `seek`, `close` | [guide](../guides/serve-object-ranges.md) |
+| Key-value state | `kvPut(namespace, key, value)`, `kvGet(namespace, key)`, `kvDelete`, `kvPutMany`, `kvGetMany`, `kvCount` | [part 4](../tutorial/state.md) |
+| Vectors | `createVectorCollection(name, { dimensions, metric, elementType })`, `putVectors(name, inputs)`, `searchVectors(name, query, { limit })`, `searchVectorsById(name, id, { limit })` | [part 2](../tutorial/search.md) |
+| Graphs | `createGraph(name)`, `putGraphNode(node)`, `putGraphEdges(edges)`, `graphNeighbors(options)`, `graphWalk(options)` | [part 3](../tutorial/relate.md) |
+| App events | `listen(channel)` returns a subscription with `tryReceive()` and `close()`; `notify(channel, payload)` | [part 4](../tutorial/state.md) |
+| Copies and space | `backupTo(destination, verify?)`, `compactTo(destination, verify?)`, `restoreBackup(source, destination, verify?)`, `reclaimSpace(options?)` | [part 5](../tutorial/maintain.md) |
+| Formats | `probeFormat(path)`, `migrateDatabase(source, destination, verify?, extensions?)`, `convertSqliteToZova` | [guide](../guides/migrate-format.md) |
+
+`restoreBackup`, `probeFormat`, `migrateDatabase`, and `convertSqliteToZova` are module functions. Progress reporting and cancellation need `AsyncDatabase`, described below.
+
 ## Synchronous database
 
 `Database` exposes SQL statements, transactions, savepoints, in-memory databases, backup and restore, binary KV, app events, objects, typed vectors, public graph operations, format probe/migration, and bundled extension lifecycle.
@@ -63,7 +84,7 @@ await db.close();
 
 Queued operations include backup, compact, restore, `reclaimSpace`, format probe/migration, KV and event operations, vector batches and searches, and graph batches and walks.
 
-Since 1.4.0, `AsyncDatabase.backupTo`, `compactTo`, and `migrateDatabase` take `{ progress, signal }` options. Abort the signal or throw from the callback to cancel. The callback runs on the event loop after the native work reports an event, so cancellation takes effect at the next event.
+`AsyncDatabase.backupTo`, `compactTo`, and `migrateDatabase` take `{ progress, signal }` options. Abort the signal or throw from the callback to cancel. The callback runs on the event loop after the native work reports an event, so cancellation takes effect at the next event.
 
 ```ts
 const controller = new AbortController();
@@ -111,7 +132,7 @@ db.close();
 
 ## Trusted extension bundles
 
-Since 1.2.0, both handle types accept trusted `.zovaext` bundles at create/open:
+Both handle types accept trusted `.zovaext` bundles at create/open:
 
 ```ts
 const extensions = { bundlePaths: ["./search.zovaext"] };

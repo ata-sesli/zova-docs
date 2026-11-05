@@ -26,7 +26,7 @@ Do not combine a header from one version with a static library from another. Do 
 
 ## Native versus generated-C behavior
 
-Rust packaging selects target-specific generated-C companion crates so users do not need Zig or build-time downloads. Python publishes stable-ABI wheels with the native extension included and no source distribution. Generated-C snapshots preserve the documented public behavior and C symbols. Since 1.2.0 they also include the trusted `.zovaext` loader on Linux, macOS, and Windows, so package consumers can select bundles at create/open. Packages from 1.1.0 and earlier do not gain this retroactively.
+Rust packaging selects target-specific generated-C companion crates so users do not need Zig or build-time downloads. Python publishes stable-ABI wheels with the native extension included and no source distribution. Generated-C snapshots preserve the documented public behavior and C symbols. They also include the trusted `.zovaext` loader on Linux, macOS, and Windows, so package consumers can select bundles at create/open. Packages from 1.1.0 and earlier do not gain this retroactively.
 
 C ABI archives bundle the compiler-runtime helpers they need, so the system C toolchain can link them. A loaded extension bundle must still match the host's OS, CPU, deployment target, and runtime ABI.
 

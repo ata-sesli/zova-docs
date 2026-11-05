@@ -2,6 +2,10 @@
 
 Records are ordinary SQLite tables owned by your application. They are the right place for metadata, constraints, indexes, joins, views, triggers, and state that changes over time.
 
+:::tip[Learn by doing]
+[Tutorial part 1](../get-started/first-database.md) builds a records-and-objects library step by step in JavaScript, Python, Rust, and Go. This page explains the rules behind it; its examples use Rust, and the API table in each binding chapter maps the calls to your language.
+:::
+
 Objects, vectors, and graphs solve specialized storage problems, but records give those values application meaning. A vector can rank `chunk:42`; the SQL row explains which document that chunk belongs to, which user may see it, and whether it is still active.
 
 ## Start with the relational model
@@ -72,7 +76,7 @@ let mut query = db.prepare(
 query.bind_i64(1, 1)?;
 
 while query.step()? == Step::Row {
-    let id = query.column_i64(0)?.unwrap();
+    let id = query.column_i64(0)?;
     let body = query.column_text(1)?.unwrap();
     println!("{id}: {body}");
 }
@@ -128,9 +132,9 @@ db.commit()?;
 
 ## SQLite policy remains visible
 
-Format-9 handles start with SQLite foreign-key enforcement enabled so Zova can enforce private graph endpoint constraints and cascades. This also enforces foreign keys in application-owned tables on the same connection. Define valid constraints and treat violations as application errors.
+Zova handles start with SQLite foreign-key enforcement enabled so Zova can enforce private graph endpoint constraints and cascades. This also enforces foreign keys in application-owned tables on the same connection. Define valid constraints and treat violations as application errors.
 
-Zova does not silently change journal or synchronous mode, enable auto-vacuum, or run `VACUUM`. Configure those decisions for your workload:
+Zova does not silently change journal or synchronous mode or run `VACUUM`. Files Zova creates use SQLite incremental auto-vacuum, so pages freed by deletes stay in the file until you release them; see [Reclaim disk space](../guides/reclaim-space.md). Configure journal and synchronous mode for your workload:
 
 ```sql
 pragma journal_mode = wal;

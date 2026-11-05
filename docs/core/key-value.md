@@ -1,6 +1,10 @@
 # Key-value storage
 
-Zova 1.0 adds transactional binary key-value storage for caches, checkpoints, compact application state, and other data that does not need a relational schema. Keys and values are byte strings, grouped into byte-string namespaces.
+Key-value (KV) storage is transactional binary storage for caches, checkpoints, compact application state, and other data that does not need a relational schema. Keys and values are byte strings, grouped into byte-string namespaces.
+
+:::tip[Learn by doing]
+[Tutorial part 4](../tutorial/state.md) stores a reading position in KV next to SQL rows. This page explains the rules behind it; its examples use Rust, and the API table in each binding chapter maps the calls to your language.
+:::
 
 Use SQL records when you need joins, constraints, indexes, or ad hoc queries. Use KV when the application already knows the exact namespace and key.
 
@@ -13,7 +17,8 @@ db.kv_put(namespace, b"theme", b"sage")?;
 let value = db.kv_get(namespace, b"theme")?;
 assert_eq!(value.as_deref(), Some(b"sage".as_slice()));
 
-assert!(db.kv_delete(namespace, b"theme")?);
+db.kv_delete(namespace, b"theme")?;
+assert_eq!(db.kv_get(namespace, b"theme")?, None);
 ```
 
 The Rust, Python, Go, JavaScript, C, and Zig surfaces provide matching put, get, delete, existence, count, namespace, and batch operations. The experimental browser package exposes its supported subset through `db.kv`.
@@ -51,4 +56,4 @@ Treat both namespace and key as opaque bytes. Zova does not impose a text encodi
 
 ## Storage format
 
-KV storage first appeared in format 10. Zova 1.4 writes format 13. Databases from earlier 1.x releases migrate explicitly to format 13, and a released v0.26.1 format-9 database migrates through the registered 9 → 10 → 11 → 12 → 13 sequence; opening never performs that migration automatically. See [Compatibility](../operations/compatibility.md).
+KV storage needs format 10 or newer. A v0.26.1 format-9 database must be migrated before it can use KV, and opening never migrates. See [Upgrade an older Zova file](../guides/migrate-format.md).

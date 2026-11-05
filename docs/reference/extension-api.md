@@ -154,17 +154,17 @@ The upgrade hook, target registration/checking, schema validation, and metadata 
 
 When both a Zova format migration and an extension-data upgrade are needed, migrate the database first with code matching the installed extension version, then run the extension upgrade against the migrated database.
 
-Since 1.2.0, a portable plugin can instead declare that new code understands existing data. A descriptor flagged with `ZOVA_PLUGIN_HAS_DATA_COMPATIBILITY_V1` names its target data version and an exact list of accepted data versions, so a code-only update opens installed data without an upgrade hook or metadata writes. Code version and stored-data version are separate.
+A portable plugin can instead declare that new code understands existing data. A descriptor flagged with `ZOVA_PLUGIN_HAS_DATA_COMPATIBILITY_V1` names its target data version and an exact list of accepted data versions, so a code-only update opens installed data without an upgrade hook or metadata writes. Code version and stored-data version are separate.
 
 ## Portable plugin ABI v1
 
-`include/zova_plugin.h` defines the language-neutral authoring contract. A portable bundle selects `zova_plugin_entry_v1` in its manifest and returns a static `zova_plugin_descriptor_v1`. Since 1.2.0, this common C ABI is the supported authoring contract. Zig helpers use the same C layouts rather than a second ABI.
+`include/zova_plugin.h` defines the language-neutral authoring contract. A portable bundle selects `zova_plugin_entry_v1` in its manifest and returns a static `zova_plugin_descriptor_v1`. This common C ABI is the supported authoring contract. Zig helpers use the same C layouts rather than a second ABI.
 
 The ABI does not sandbox plugins: loading a library may execute native initializers. No allocation, C++ exception, or Rust panic may cross the boundary. Native and generated-C hosts load portable plugins on Linux, macOS, and Windows.
 
 ## Host services
 
-Since 1.2.0, hooks can negotiate host services by ID, version, and minimum structure size. A plugin declares required services in its descriptor flags, so an older host rejects it before any hook runs. Optional services can be probed.
+Hooks can negotiate host services by ID, version, and minimum structure size. A plugin declares required services in its descriptor flags, so an older host rejects it before any hook runs. Optional services can be probed.
 
 | Service | Purpose |
 |---|---|
@@ -177,7 +177,7 @@ Since 1.2.0, hooks can negotiate host services by ID, version, and minimum struc
 
 Related calls in one hook share a host-owned savepoint with pinned main and bound-store snapshots. It joins a caller transaction, sees the caller's earlier writes, and never commits it. Plugins must not issue transaction commands or mutate authoritative data through SQL. A plugin's read-only operations may also query application tables in `main` through the query service.
 
-Since 1.3.0, the data service adds two graph operations:
+The data service provides two graph operations:
 
 - `ZOVA_PLUGIN_GRAPH_EDGE_PAYLOADS_GET` takes a batch of edge keys and returns one row per key, in input order, with a found flag and the payload. Payload bytes count toward the request's byte budget.
 - `ZOVA_PLUGIN_GRAPH_NEIGHBORS_KEYED` reads the adjacency of a batch of node keys in one request, with a direction and an optional edge type or set of edge types. Rows are grouped by input key and pages resume from the last row.
@@ -216,7 +216,7 @@ Private index data lives in the main file while a bound vector store may have it
 
 The low-level ABI includes bundle verification, trust/untrust operations, and database open/create variants that receive explicit trusted bundle paths. Loaded libraries remain alive until the database handle closes.
 
-Since 1.3.0, a host that links plugin code into its own process can supply descriptors directly:
+A host that links plugin code into its own process can supply descriptors directly:
 
 ```c
 #include "zova.h"
@@ -239,12 +239,12 @@ zova_status status = zova_database_open_with_plugins(&request);
 
 `zova_database_migrate_with_extensions` migrates a database whose installed extensions are not bundled with Zova, accepting the same bundle paths and linked descriptors as open. Plain `zova_database_migrate` still refuses such a database and publishes nothing.
 
-The linked-descriptor functions are declared by raw `zova-sys` but not wrapped by the safe Rust, Python, Go, or JavaScript APIs. Since 1.4.0, those bindings do wrap migration with trusted bundle paths; see [Compatibility](../operations/compatibility.md#migration-rules).
+The linked-descriptor functions are declared by raw `zova-sys` but not wrapped by the safe Rust, Python, Go, or JavaScript APIs. Those bindings do wrap migration with trusted bundle paths; see [Compatibility](../operations/compatibility.md#migration-rules).
 
 The C ABI also supports controlled scalar SQL callbacks. Callback arguments are borrowed for the call, result bytes are copied, and callbacks must not re-enter the same database handle.
 
-Since 1.2.0, generated-C package builds load external `.zovaext` bundles with the same loader as native Zig builds.
+Generated-C package builds load external `.zovaext` bundles with the same loader as native Zig builds.
 
 ## Current non-goals
 
-The v1.4.0 contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.
+The current contract does not include aggregate or window callbacks, SQLite subtype support, unregister APIs, raw `sqlite3 *` exposure as the normal extension path, extension signing, optional installed extensions, or stable high-level authoring SDKs.

@@ -18,7 +18,7 @@ Choose the highest-level binding that fits your application. Every binding uses 
 | Zig or Zova development | source package | build the native project with Zig |
 | Operations only | CLI archive | standalone executable |
 
-Use `zova-sys` only when a Rust application specifically needs the raw C ABI. Since 1.2.0, every native package can load explicitly trusted `.zovaext` extension bundles; see [Extensions](../guides/extensions.md).
+Use `zova-sys` only when a Rust application specifically needs the raw C ABI. Every native package can load explicitly trusted `.zovaext` extension bundles; see [Extensions](../guides/extensions.md).
 
 ## Install or build for your language
 

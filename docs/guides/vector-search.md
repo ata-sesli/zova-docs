@@ -1,4 +1,4 @@
-# Vector search
+# Combine vector search with SQL filters
 
 Zova offers two exact-search paths: native APIs that return ranked vector IDs, and SQL helpers that join ranking directly to application records. Both use the collection's configured metric and return lower distances first.
 

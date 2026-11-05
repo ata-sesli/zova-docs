@@ -4,6 +4,10 @@ Vectors store numeric representations used for similarity ranking. In Zova, vect
 
 Zova performs deterministic exact search. It compares the query against every eligible vector rather than using an approximate nearest-neighbor index.
 
+:::tip[Learn by doing]
+[Tutorial part 2](../tutorial/search.md) adds embeddings to a document library and searches them in code and SQL. This page explains the rules behind it; its examples use Rust, and the API table in each binding chapter maps the calls to your language.
+:::
+
 ## Collections define the contract
 
 Every collection fixes three properties:
@@ -95,7 +99,7 @@ for result in results {
 }
 ```
 
-Search is deterministic and supports top-k, inclusive distance thresholds, candidate filtering, search by an existing vector ID, and batch writes. Since v0.24, larger result sets use adaptive top-k selection internally while preserving exact distances and deterministic result ordering. Candidate-filtered search is useful when SQL or application policy has already narrowed the allowed IDs.
+Search is deterministic and supports top-k, inclusive distance thresholds, candidate filtering, search by an existing vector ID, and batch writes. Larger result sets use adaptive top-k selection internally while preserving exact distances and deterministic result ordering. Candidate-filtered search is useful when SQL or application policy has already narrowed the allowed IDs.
 
 Exact search is a good fit for local datasets, offline ranking, deterministic tests, and SQL-filter-first workflows. It is not an ANN engine for million-scale, low-latency retrieval. If that scale is a hard requirement, evaluate the limitation before committing to Zova's vector layer.
 
@@ -130,6 +134,6 @@ Deleting a collection removes Zova-owned vectors in that collection. It does not
 
 Start with vectors in the main database. Optional bound vector stores change local file placement, not the collection or search APIs.
 
-Format 8 introduced compact private collection keys and stored each vector's cached norm beside its values; later formats retain that vector layout. These are private storage optimizations: collection names, vector IDs, metrics, distances, and public APIs remain unchanged. Private vector tables are not a supported SQL interface.
+Private collection keys are compact, and each vector's cached norm is stored beside its values. These are private storage optimizations: collection names, vector IDs, metrics, distances, and public APIs remain unchanged. Private vector tables are not a supported SQL interface.
 
-Format 12, introduced in Zova 1.2.0, adds transactional vector change tracking. Each vector write records a source revision in the same transaction, so a trusted extension that maintains a derived index can reconcile against an exact snapshot. Extensions read this history through the [plugin host services](../reference/extension-api.md#host-services); it is not an application API.
+Vector writes are change-tracked: each vector write records a source revision in the same transaction, so a trusted extension that maintains a derived index can reconcile against an exact snapshot. Extensions read this history through the [plugin host services](../reference/extension-api.md#host-services); it is not an application API.

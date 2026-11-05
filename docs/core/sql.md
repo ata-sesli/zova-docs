@@ -2,6 +2,10 @@
 
 SQLite is Zova's relational core. Use ordinary SQL for application tables and metadata, then use Zova's connection-local SQL helpers when specialized results need to join back to those records.
 
+:::tip[Learn by doing]
+[Tutorial part 2](../tutorial/search.md) and [part 3](../tutorial/relate.md) join vector and graph results to application rows. This page explains the rules behind it; its examples use Rust, and the API table in each binding chapter maps the calls to your language.
+:::
+
 ## Ordinary SQL stays ordinary
 
 Prepared statements are the preferred interface for values:
@@ -101,7 +105,7 @@ This boundary is important when using pools, migration tools, or external analyt
 
 ## Bundled SQLite modules
 
-Zova vendors its own SQLite build. Since 1.1.0 it enables these modules in native builds, language packages, and the WASM package:
+Zova vendors its own SQLite build. It enables these modules in native builds, language packages, and the WASM package:
 
 | Module | Use it for |
 |---|---|

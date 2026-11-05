@@ -28,7 +28,7 @@ zova migrate app.zova app-format-13.zova
 
 `format` is read-only and reports whether the source is current, migratable, unsupported legacy, or unsupported future. `migrate` performs an offline copy-forward migration into a new destination and verifies that destination by default. Add `--no-verify` only when verification is handled separately.
 
-Since 1.4.0, `migrate --dry-run` runs the same preflight checks as a real migration and reports the planned files, page and byte counts, destination free space, and whether every installed extension is available, without creating or changing anything. It exits `0` when the migration would pass, and with the migration's failure code otherwise. `migrate` also accepts `--progress`; see [Progress and cancellation](../operations/safety.md#progress-and-cancellation).
+`migrate --dry-run` runs the same preflight checks as a real migration and reports the planned files, page and byte counts, destination free space, and whether every installed extension is available, without creating or changing anything. It exits `0` when the migration would pass, and with the migration's failure code otherwise. `migrate` also accepts `--progress`; see [Progress and cancellation](../operations/safety.md#progress-and-cancellation).
 
 If migration is interrupted, preserve the destination and its `.migration-recovery` directory together and use the matching release's `scripts/recover-migration.py` procedure described in [Compatibility](../operations/compatibility.md).
 
@@ -94,7 +94,7 @@ zova reclaim app.zova
 zova reclaim --json --max-pages 100000 app.zova
 ```
 
-Since 1.4.0, `reclaim` releases free pages back to the filesystem in place, in bounded steps, from members in incremental auto-vacuum mode. Members in `none` mode, including migrated files, need `compact` first. See [Reclaim free pages in place](../operations/safety.md#reclaim-free-pages-in-place).
+`reclaim` releases free pages back to the filesystem in place, in bounded steps, from members in incremental auto-vacuum mode. Members in `none` mode, including migrated files, need `compact` first. See [Reclaim free pages in place](../operations/safety.md#reclaim-free-pages-in-place).
 
 ## Recover readable data
 
@@ -169,7 +169,7 @@ zova extension pack ./sample_ext --out ./sample_ext.zovaext
 zova extension verify --smoke ./sample_ext.zovaext
 ```
 
-This producer workflow is experimental in v1.4.0. Native extensions are trusted in-process code and require platform- and ABI-compatible builds.
+This producer workflow is experimental. Native extensions are trusted in-process code and require platform- and ABI-compatible builds.
 
 ## Output and privacy contract
 

@@ -24,7 +24,7 @@ Backup does not promise the smallest possible file. Compact is not a substitute 
 
 ## Reclaim free pages in place
 
-Since 1.4.0, files Zova creates, the stores that `split` creates, and every member of `compact` output use SQLite incremental auto-vacuum. Zova never vacuums automatically: deleted pages stay on the freelist until you release them.
+New databases, the stores that `split` creates, and every member of `compact` output use SQLite incremental auto-vacuum. Zova never vacuums automatically: deleted pages stay on the freelist until you release them.
 
 ```sh
 zova reclaim app.zova
@@ -45,7 +45,7 @@ The bindings expose the same operation as `reclaim_space` (Rust and Python), `Re
 
 ## Progress and cancellation
 
-Since 1.4.0, `backup`, `compact`, and `migrate` report progress. On a terminal, the CLI shows one progress line on stderr; `--progress` writes plain progress lines when stderr is not a terminal; and `--json --progress` writes one JSON event per line to stderr while the final result object stays on stdout:
+`backup`, `compact`, and `migrate` report progress. On a terminal, the CLI shows one progress line on stderr; `--progress` writes plain progress lines when stderr is not a terminal; and `--json --progress` writes one JSON event per line to stderr while the final result object stays on stdout:
 
 ```json
 {"cli_json_version":1,"event":"progress","command":"migrate","phase":"copy","member":"main","done":1024,"total":4113}

@@ -46,7 +46,7 @@ try {
 
 Persistent opening requires a secure context, dedicated workers, Web Locks, and OPFS synchronous access handles. Names are case-sensitive, 1–64 ASCII letters, digits, underscores, or hyphens, beginning with a letter or digit.
 
-Opening validates an existing file without migrating it. Since 1.2.0, opening may first recover an abandoned SQLite rollback journal left by a terminated worker, restoring committed state. This is transaction recovery, not a format migration.
+Opening validates an existing file without migrating it. Opening may first recover an abandoned SQLite rollback journal left by a terminated worker, restoring committed state. This is transaction recovery, not a format migration.
 
 One owner may open a name at a time. A competing tab or worker receives `ZOVA_BUSY`; wait for the owner to close before retrying with a bounded delay. Different names can be open concurrently.
 

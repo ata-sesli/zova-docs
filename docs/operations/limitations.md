@@ -30,7 +30,7 @@ Calls through one database handle are serialized. Use multiple handles for actua
 
 ## Extensions and bindings
 
-Dynamic extensions are trusted in-process native code, not a sandbox. Native and generated-C hosts load explicitly trusted bundles on Linux, macOS, and Windows, and the Rust, Python, Go, and JavaScript bindings select bundles at create/open. Since 1.4.0 they also migrate databases with non-bundled extensions installed. Those bindings do not wrap extension authoring, scalar callbacks, explicit extension-data upgrades, or linked plugin descriptors; use the C ABI or Zig for those. Extension authoring beyond the common C plugin ABI, and the reference extensions, remain experimental. A single graph edge payload larger than the 1 MiB data-service page budget cannot be read through the plugin data service.
+Dynamic extensions are trusted in-process native code, not a sandbox. Native and generated-C hosts load explicitly trusted bundles on Linux, macOS, and Windows, and the Rust, Python, Go, and JavaScript bindings select bundles at create/open. They also migrate databases with non-bundled extensions installed. Those bindings do not wrap extension authoring, scalar callbacks, explicit extension-data upgrades, or linked plugin descriptors; use the C ABI or Zig for those. Extension authoring beyond the common C plugin ABI, and the reference extensions, remain experimental. A single graph edge payload larger than the 1 MiB data-service page budget cannot be read through the plugin data service.
 
 Store-management APIs are native Zig and CLI-only. Diagnostics and salvage are CLI-first; bindings should not parse human output as a library contract.
 
